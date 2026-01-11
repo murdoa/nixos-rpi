@@ -9,10 +9,14 @@
   imports = [
   ];
 
+  nixpkgs.overlays = [
+    (import ./kernel/overlay.nix)
+  ];
+
   nix.optimise.automatic = true;
   nix.settings.auto-optimise-store = true;
 
-  boot.kernelPackages = lib.mkForce pkgs.linuxPackages_latest;
+  boot.kernelPackages = lib.mkForce (pkgs.linuxKernel.packagesFor pkgs.linux_rpi3_custom);
 
   boot.initrd.checkJournalingFS = false;
   fileSystems."/boot" = {

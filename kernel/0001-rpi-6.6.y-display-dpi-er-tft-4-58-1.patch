@@ -1,0 +1,308 @@
+diff --git a/arch/arm/boot/dts/overlays/Makefile b/arch/arm/boot/dts/overlays/Makefile
+index 05f9f10b1bbe..6c3b61cacc79 100644
+--- a/arch/arm/boot/dts/overlays/Makefile
++++ b/arch/arm/boot/dts/overlays/Makefile
+@@ -319,6 +319,7 @@ dtbo-$(CONFIG_ARCH_BCM2835) += \
+ 	vc4-kms-dpi-hyperpixel2r.dtbo \
+ 	vc4-kms-dpi-hyperpixel4.dtbo \
+ 	vc4-kms-dpi-hyperpixel4sq.dtbo \
++	vc4-kms-dpi-er-tft-4-58-1.dtbo \
+ 	vc4-kms-dpi-panel.dtbo \
+ 	vc4-kms-dsi-7inch.dtbo \
+ 	vc4-kms-dsi-generic.dtbo \
+diff --git a/arch/arm/boot/dts/overlays/vc4-kms-dpi-er-tft-4-58-1-overlay.dts b/arch/arm/boot/dts/overlays/vc4-kms-dpi-er-tft-4-58-1-overlay.dts
+new file mode 100644
+index 000000000000..8e09ccb96a32
+--- /dev/null
++++ b/arch/arm/boot/dts/overlays/vc4-kms-dpi-er-tft-4-58-1-overlay.dts
+@@ -0,0 +1,160 @@
++/*
++ * vc4-kms-dpi-er_tft_4_58_1.dts
++ */
++
++/dts-v1/;
++/plugin/;
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/pinctrl/bcm2835.h>
++
++/ {
++	compatible = "brcm,bcm2835";
++
++	fragment@0 {
++		target-path = "/";
++		__overlay__ {
++			pwm_gpio: pwm_gpio@27 {
++				#pwm-cells = <2>;
++				compatible = "pwm-gpio";
++				pinctrl-names = "default";
++				pinctrl-0 = <&pwm_gpio_pins>;
++				gpios = <&gpio 27 0>;
++				status = "okay";
++				enabled = <1>;
++			};
++		};
++	};
++
++	fragment@1 {
++		target-path = "/";
++		__overlay__ {
++
++			backlight: backlight {
++				compatible = "pwm-backlight";
++				pwms = <&pwm_gpio 0 5000000 0>;
++		
++				brightness-levels = <0 4 8 16 32 64 128 255>;
++				default-brightness-level = <3>;
++		
++				// post-pwm-on-delay-ms = <10>;
++				// pwm-off-delay-ms = <10>;
++			};
++
++			spi {
++				compatible = "spi-gpio";
++				#address-cells = <1>;
++				#size-cells = <0>;
++				pinctrl-0 = <&spi_pins>;
++				pinctrl-names = "default";
++
++				sck-gpios = <&gpio 25 GPIO_ACTIVE_HIGH>;
++				mosi-gpios = <&gpio 24 GPIO_ACTIVE_HIGH>;
++				cs-gpios = <&gpio 26 GPIO_ACTIVE_LOW>;
++				num-chipselects = <1>;
++				sck-idle-input;
++
++				panel: display@0 {
++					reg = <0>;
++					/* 100 kHz */
++					spi-max-frequency = <100000>;
++					backlight = <&backlight>;
++					rotation = <90>;
++
++					compatible = "muroda,er-tft-4.58-1";
++
++					port {
++						panel_in: endpoint {
++							remote-endpoint = <&dpi_out>;
++						};
++					};
++				};
++			};
++		};
++	};
++
++	fragment@2 {
++		target = <&dpi>;
++		__overlay__  {
++			status = "okay";
++
++			pinctrl-names = "default";
++			pinctrl-0 = <&dpi_16bit_gpio0>;
++
++			port {
++				dpi_out: endpoint {
++					remote-endpoint = <&panel_in>;
++				};
++			};
++		};
++	};
++
++	fragment@3 {
++		target = <&gpio>;
++		__overlay__ {
++			spi_pins: er_tft_4_58_1_spi_pins {
++				brcm,pins = <25 26 24>;
++				brcm,pull = <BCM2835_PUD_UP BCM2835_PUD_UP BCM2835_PUD_OFF>;
++				brcm,function = <0>;
++			};
++		};
++	};
++
++	fragment@4 {
++		target-path = "/";
++		__overlay__ {
++			i2c_gpio: i2c@0 {
++				compatible = "i2c-gpio";
++				gpios = <&gpio 22 0 /* sda */
++					 &gpio 23 0>; /* scl */
++				i2c-gpio,delay-us = <4>;        /* ~100 kHz */
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++		};
++	};
++
++	fragment@5 {
++		target = <&gpio>;
++		__overlay__ {
++			pwm_gpio_pins: pwm_gpio_pins@27 {
++				brcm,pins = <27>; /* gpio 4 */
++				brcm,function = <1>; /* output */
++				brcm,pull = <0>; /* pull-none */
++			};
++		};
++	};
++
++
++	fragment@6 {
++		target = <&i2c_gpio>;
++		__overlay__ {
++			/* needed to avoid dtc warning */
++			#address-cells = <1>;
++			#size-cells = <0>;
++			ft6236_5d: ft6236@5d {
++				compatible = "goodix,gt911";
++				reg = <0x5d>;
++				interrupt-parent = <&gpio>;
++				interrupts = <21 2>;
++				touchscreen-size-x = <320>;
++				touchscreen-size-y = <960>;
++				touchscreen-x-mm = <37>;
++				touchscreen-y-mm = <110>;
++				// touchscreen-inverted-y;
++				// touchscreen-swapped-x-y;
++			};
++		};
++	};
++
++	
++	__overrides__ {
++		gpio = <&pwm_gpio>,"gpios:27",
++		       <&pwm_gpio_pins>,"brcm,pins:0",
++		       /* modify reg values to allow multiple instantiation */
++		       <&pwm_gpio>,"reg:0",
++		       <&pwm_gpio_pins>,"reg:0";
++
++		rotate = <&panel>, "rotation:90";
++	};
++};
+diff --git a/drivers/gpu/drm/panel/panel-sitronix-st7701.c b/drivers/gpu/drm/panel/panel-sitronix-st7701.c
+index b226d8a885ba..cbb858b970ce 100644
+--- a/drivers/gpu/drm/panel/panel-sitronix-st7701.c
++++ b/drivers/gpu/drm/panel/panel-sitronix-st7701.c
+@@ -583,6 +583,57 @@ static void txw210001b0_init_sequence(struct st7701 *st7701)
+ 	ST7701_SPI(st7701, MIPI_DCS_EXIT_SLEEP_MODE);
+ }
+ 
++static void er_tft_4_58_1_init_sequence(struct st7701 *st7701)
++{
++	// RGB HV mode
++	// Vsync Low Active
++	// Hsync Low Active
++	// DOTCLK input on positive edge
++	// Enable polarity 0 
++	
++
++	// First set to hsync_bp 0x05,  vsync_bp 0x0dp
++	ST7701_SPI(st7701, 0xff, 0x177, 0x101, 0x100, 0x100, 0x113);
++	ST7701_SPI(st7701, 0xef, 0x108);
++	ST7701_SPI(st7701, 0xff, 0x177, 0x101, 0x100, 0x100, 0x110);
++	ST7701_SPI(st7701, 0xc0, 0x177, 0x100);
++	ST7701_SPI(st7701, 0xc1, 0x109, 0x108);
++	ST7701_SPI(st7701, 0xc2, 0x137, 0x102);
++	ST7701_SPI(st7701, 0xc3, 0x180, 0x105, 0x10d);
++	ST7701_SPI(st7701, 0xcc, 0x110);
++	ST7701_SPI(st7701, 0xb0, 0x140, 0x114, 0x159, 0x110, 0x112, 0x108, 0x103, 0x109, 0x105, 0x11e, 0x105, 0x114, 0x110, 0x168, 0x133, 0x115);
++	ST7701_SPI(st7701, 0xb1, 0x140, 0x108, 0x153, 0x109, 0x111, 0x109, 0x102, 0x107, 0x109, 0x11a, 0x104, 0x112, 0x112, 0x164, 0x129, 0x129);
++	ST7701_SPI(st7701, 0xff, 0x177, 0x101, 0x100, 0x100, 0x111);
++	ST7701_SPI(st7701, 0xb0, 0x16d);
++	ST7701_SPI(st7701, 0xb1, 0x11d);
++	ST7701_SPI(st7701, 0xb2, 0x187);
++	ST7701_SPI(st7701, 0xb3, 0x180);
++	ST7701_SPI(st7701, 0xb5, 0x149);
++	ST7701_SPI(st7701, 0xb7, 0x185);
++	ST7701_SPI(st7701, 0xb8, 0x120);
++	ST7701_SPI(st7701, 0xc1, 0x178);
++	ST7701_SPI(st7701, 0xc2, 0x178);
++	ST7701_SPI(st7701, 0xd0, 0x188);
++	ST7701_SPI(st7701, 0xe0, 0x100, 0x100, 0x102);
++	ST7701_SPI(st7701, 0xe1, 0x102, 0x18c, 0x100, 0x100, 0x103, 0x18c, 0x100, 0x100, 0x100, 0x133, 0x133);
++	ST7701_SPI(st7701, 0xe2, 0x133, 0x133, 0x133, 0x133, 0x1c9, 0x13c, 0x100, 0x100, 0x1ca, 0x13c, 0x100, 0x100, 0x100);
++	ST7701_SPI(st7701, 0xe3, 0x100, 0x100, 0x133, 0x133);
++	ST7701_SPI(st7701, 0xe4, 0x144, 0x144);
++	ST7701_SPI(st7701, 0xe5, 0x105, 0x1cd, 0x182, 0x182, 0x101, 0x1c9, 0x182, 0x182, 0x107, 0x1cf, 0x182, 0x182, 0x103, 0x1cb, 0x182, 0x182);
++	ST7701_SPI(st7701, 0xe6, 0x100, 0x100, 0x133, 0x133);
++	ST7701_SPI(st7701, 0xe7, 0x144, 0x144);
++	ST7701_SPI(st7701, 0xe8, 0x106, 0x1ce, 0x182, 0x182, 0x102, 0x1ca, 0x182, 0x182, 0x108, 0x1d0, 0x182, 0x182, 0x104, 0x1cc, 0x182, 0x182);
++	ST7701_SPI(st7701, 0xeb, 0x108, 0x101, 0x1e4, 0x1e4, 0x188, 0x100, 0x140);
++	ST7701_SPI(st7701, 0xec, 0x100, 0x100, 0x100);
++	ST7701_SPI(st7701, 0xed, 0x1ff, 0x1f0, 0x107, 0x165, 0x14f, 0x1fc, 0x1c2, 0x12f, 0x1f2, 0x12c, 0x1cf, 0x1f4, 0x156, 0x170, 0x10f, 0x1ff);
++	ST7701_SPI(st7701, 0xef, 0x110, 0x10d, 0x104, 0x108, 0x13f, 0x11f);
++	ST7701_SPI(st7701, 0xff, 0x177, 0x101, 0x100, 0x100, 0x100);
++	ST7701_SPI(st7701, 0x11);
++	usleep_range(120000, 130000);
++	ST7701_SPI(st7701, 0x35, 0x100);
++	ST7701_SPI(st7701, 0x3a, 0x166);
++}
++
+ static int st7701_prepare(struct drm_panel *panel)
+ {
+ 	struct st7701 *st7701 = panel_to_st7701(panel);
+@@ -1079,6 +1130,35 @@ static const struct st7701_panel_desc hyperpixel2r_desc = {
+ 	.bus_flags = DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE,
+ };
+ 
++static const struct drm_display_mode er_tft_4_58_1_mode = {
++	.clock		= 13002,
++
++	.hdisplay	 = 320,
++	.hsync_start = 320 + 20,
++	.hsync_end	 = 320 + 20 + 20,
++	.htotal		 = 320 + 20 + 20 + 80,
++
++	.vdisplay	= 960,
++	.vsync_start	= 960 + 12,
++	.vsync_end	= 960 + 12 + 3,
++	.vtotal		= 960 + 12 + 3 + 10,
++
++	.width_mm	= 37,
++	.height_mm	= 110,
++	.flags = DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC,
++
++	.type = DRM_MODE_TYPE_DRIVER | DRM_MODE_TYPE_PREFERRED,
++};
++
++static const struct st7701_panel_desc er_tft_4_58_1_desc = {
++	.mode = &er_tft_4_58_1_mode,
++	.mediabus_format = MEDIA_BUS_FMT_RGB565_1X16,
++	.init_sequence = er_tft_4_58_1_init_sequence,
++	.conn_type = DRM_MODE_CONNECTOR_DPI,
++	.interface = ST7701_CTRL_SPI,
++	.bus_flags = DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE,
++};
++
+ static int st7701_probe(struct device *dev, struct st7701 **ret_st7701)
+ {
+ 	const struct st7701_panel_desc *desc;
+@@ -1200,6 +1280,10 @@ static const struct of_device_id st7701_spi_of_match[] = {
+ 		.compatible = "pimoroni,hyperpixel2round",
+ 		.data = &hyperpixel2r_desc,
+ 	}, {
++		.compatible = "muroda,er-tft-4.58-1",
++		.data = &er_tft_4_58_1_desc,
++	},
++	{
+ 		/* sentinel */
+ 	}
+ };
+@@ -1239,6 +1323,7 @@ static void st7701_spi_remove(struct spi_device *spi)
+ static const struct spi_device_id st7701_spi_ids[] = {
+ 	{ "txw210001b0", 0 },
+ 	{ "hyperpixel2round", 0 },
++	{ "er-tft-4.58-1", 0 },
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(spi, st7701_spi_ids);
+diff --git a/drivers/video/backlight/pwm_bl.c b/drivers/video/backlight/pwm_bl.c
+index 35c716e9043c..63c9a2e09f2f 100644
+--- a/drivers/video/backlight/pwm_bl.c
++++ b/drivers/video/backlight/pwm_bl.c
+@@ -445,7 +445,7 @@ static int pwm_backlight_initial_power_state(const struct pwm_bl_data *pb)
+ 	 * assume that another driver will enable the backlight at the
+ 	 * appropriate time. Therefore, if it is disabled, keep it so.
+ 	 */
+-	return active ? FB_BLANK_UNBLANK: FB_BLANK_POWERDOWN;
++	return true; //active ? FB_BLANK_UNBLANK: FB_BLANK_POWERDOWN;
+ }
+ 
+ static int pwm_backlight_probe(struct platform_device *pdev)

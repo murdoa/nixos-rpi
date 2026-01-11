@@ -12,7 +12,7 @@
       self,
       nixpkgs,
       nixos-hardware,
-      ssh-keys
+      ssh-keys,
     }@inputs:
     rec {
       images =
@@ -23,14 +23,14 @@
           pi4 = self.nixosConfigurations.pi4.config.system.build.image;
           pi3 = self.nixosConfigurations.pi3.config.system.build.image.overrideAttrs {
             preInstall = ''
-              ${pkgs.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3.config.image.repart.imageFileBasename}.raw
-              echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${pkgs.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3.config.image.repart.imageFileBasename}.raw
+              ${pkgs.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3.config.image.baseName}.raw
+              echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${pkgs.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3.config.image.baseName}.raw
             '';
           };
           pi0 = self.nixosConfigurations.pi0.config.system.build.image.overrideAttrs {
             preInstall = ''
-              ${pkgs.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi0.config.image.repart.imageFileBasename}.raw
-              echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${pkgs.util-linux}/bin/fdisk ${self.nixosConfigurations.pi0.config.image.repart.imageFileBasename}.raw
+              ${pkgs.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi0.config.image.baseName}.raw
+              echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${pkgs.util-linux}/bin/fdisk ${self.nixosConfigurations.pi0.config.image.baseName}.raw
             '';
           };
         };
@@ -44,30 +44,32 @@
       apps.x86_64-linux =
         let
           pkgs = nixpkgs.legacyPackages.x86_64-linux;
-          mkFlashScript = image: pkgs.writeShellScriptBin "flash" ''
-            set -euo pipefail
-            if [ $# -ne 1 ]; then
-              echo "Usage: $0 <device>"
-              echo "Example: $0 /dev/sdc"
-              exit 1
-            fi
-            DEVICE="$1"
-            IMAGE="${image}/image.raw"
+          mkFlashScript =
+            image:
+            pkgs.writeShellScriptBin "flash" ''
+              set -euo pipefail
+              if [ $# -ne 1 ]; then
+                echo "Usage: $0 <device>"
+                echo "Example: $0 /dev/sdc"
+                exit 1
+              fi
+              DEVICE="$1"
+              IMAGE="${image}/image.raw"
 
-            if [ ! -e "$DEVICE" ]; then
-              echo "Error: Device $DEVICE does not exist"
-              exit 1
-            fi
+              if [ ! -e "$DEVICE" ]; then
+                echo "Error: Device $DEVICE does not exist"
+                exit 1
+              fi
 
-            if [ ! -b "$DEVICE" ]; then
-              echo "Error: $DEVICE is not a block device"
-              exit 1
-            fi
+              if [ ! -b "$DEVICE" ]; then
+                echo "Error: $DEVICE is not a block device"
+                exit 1
+              fi
 
-            echo "Flashing $IMAGE to $DEVICE..."
-            ${pkgs.pv}/bin/pv -s "$(stat -c%s "$IMAGE")" "$IMAGE" | sudo ${pkgs.coreutils}/bin/dd of="$DEVICE" bs=8M oflag=direct status=none && sync
-            echo "Done!"
-          '';
+              echo "Flashing $IMAGE to $DEVICE..."
+              ${pkgs.pv}/bin/pv -s "$(stat -c%s "$IMAGE")" "$IMAGE" | sudo ${pkgs.coreutils}/bin/dd of="$DEVICE" bs=8M oflag=direct status=none && sync
+              echo "Done!"
+            '';
         in
         {
           flash-pi4 = {
