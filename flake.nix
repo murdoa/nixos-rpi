@@ -40,6 +40,50 @@
       packages.aarch64-linux.pi3-image = images.pi3;
       packages.x86_64-linux.pi0-image = images.pi0;
       packages.aarch64-linux.pi0-image = images.pi0;
+
+      apps.x86_64-linux =
+        let
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+          mkFlashScript = image: pkgs.writeShellScriptBin "flash" ''
+            set -euo pipefail
+            if [ $# -ne 1 ]; then
+              echo "Usage: $0 <device>"
+              echo "Example: $0 /dev/sdc"
+              exit 1
+            fi
+            DEVICE="$1"
+            IMAGE="${image}/image.raw"
+
+            if [ ! -e "$DEVICE" ]; then
+              echo "Error: Device $DEVICE does not exist"
+              exit 1
+            fi
+
+            if [ ! -b "$DEVICE" ]; then
+              echo "Error: $DEVICE is not a block device"
+              exit 1
+            fi
+
+            echo "Flashing $IMAGE to $DEVICE..."
+            ${pkgs.pv}/bin/pv -s "$(stat -c%s "$IMAGE")" "$IMAGE" | sudo ${pkgs.coreutils}/bin/dd of="$DEVICE" bs=8M oflag=direct status=none && sync
+            echo "Done!"
+          '';
+        in
+        {
+          flash-pi4 = {
+            type = "app";
+            program = "${mkFlashScript images.pi4}/bin/flash";
+          };
+          flash-pi3 = {
+            type = "app";
+            program = "${mkFlashScript images.pi3}/bin/flash";
+          };
+          flash-pi0 = {
+            type = "app";
+            program = "${mkFlashScript images.pi0}/bin/flash";
+          };
+        };
+
       nixosConfigurations = {
         pi0 = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
