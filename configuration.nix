@@ -1,29 +1,55 @@
-{ pkgs, lib, config, ... }:
 {
+  pkgs,
+  lib,
+  config,
+  ssh-keys,
+  ...
+}:
+{
+  imports = [
+  ];
+
+  nix.optimise.automatic = true;
+  nix.settings.auto-optimise-store = true;
+
   boot.kernelPackages = lib.mkForce pkgs.linuxPackages_latest;
-  environment.systemPackages = with pkgs; [ vim git ];
+
+  boot.initrd.checkJournalingFS = false;
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-label/ESP";
+    fsType = "vfat";
+    noCheck = true; # skip fsck on ESP
+  };
+
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "ext4";
+    noCheck = true; # skip fsck on rootfs
+  };
+
+  nixpkgs.config.allowUnfree = true;
+  environment.systemPackages = with pkgs; [
+    vim
+    git
+  ];
   services.openssh.enable = true;
-  networking.hostName = "pi";
+  networking.hostName = "nixos";
+
   users = {
-    users.default = {
+    users.nixos = {
       password = "default";
       isNormalUser = true;
-      extraGroups = [ "wheel" ];
+      extraGroups = [ "wheel" ];       
+      openssh.authorizedKeys.keyFiles = [ ssh-keys.outPath ];
     };
   };
-  networking = {
-    interfaces."wlan0".useDHCP = true;
-    wireless = {
-      interfaces = [ "wlan0" ];
-      enable = true;
-      networks = {
-        networkSSID.psk = "password";
-      };
-    };
-  };
+
   nix.settings = {
     experimental-features = lib.mkDefault "nix-command flakes";
-    trusted-users = [ "root" "@wheel" ];
+    trusted-users = [
+      "root"
+      "@wheel"
+    ];
   };
-  boot.extraModulePackages = [ config.boot.kernelPackages.rtl8812au ];
+  system.stateVersion = "25.11";
 }
