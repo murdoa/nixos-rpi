@@ -32,10 +32,10 @@
 			backlight: backlight {
 				compatible = "pwm-backlight";
 				pwms = <&pwm_gpio 0 5000000 0>;
-		
+
 				brightness-levels = <0 4 8 16 32 64 128 255>;
 				default-brightness-level = <3>;
-		
+
 				// post-pwm-on-delay-ms = <10>;
 				// pwm-off-delay-ms = <10>;
 			};
@@ -105,7 +105,7 @@
 			i2c_gpio: i2c@0 {
 				compatible = "i2c-gpio";
 				gpios = <&gpio 22 0 /* sda */
-					 &gpio 23 0>; /* scl */
+				&gpio 23 0>; /* scl */
 				i2c-gpio,delay-us = <4>;        /* ~100 kHz */
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -124,8 +124,19 @@
 		};
 	};
 
-
 	fragment@6 {
+		target = <&gpio>;
+		__overlay__ {
+			dpi_16bit_gpio0: dpi_16bit_gpio0 {
+				brcm,pins = <0 1 2 3 4 5 6 7 8 9 10 11
+				12 13 14 15 16 17 18 19>;
+				brcm,function = <BCM2835_FSEL_ALT2>;
+			};
+		};
+	};
+
+
+	fragment@7 {
 		target = <&i2c_gpio>;
 		__overlay__ {
 			/* needed to avoid dtc warning */
@@ -147,35 +158,47 @@
 	};
 
 
-	fragment@7 {
-        target = <&i2c_arm>;
-        __overlay__ {
-            status = "disabled";
-        };
-    };
+	fragment@8 {
+		target = <&i2c0>;
+		__overlay__ {
+			/delete-property/ pinctrl-names;
+			/delete-property/ pinctrl-0;
+		};
+	};
 
-    fragment@8 {
-        target-path = "/aliases";
-        __overlay__ {
-            i2c_gpio = "/i2c@0";
-        };
-    };
+	fragment@9 {
+		target = <&i2c1>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
 
-    fragment@9 {
-        target-path = "/__symbols__";
-        __overlay__ {
-            i2c_gpio = "/i2c@0";
-        };
-    };
+	fragment@10 {
+		target-path = "/aliases";
+		__overlay__ {
+			i2c_gpio = "/i2c@0";
+		};
+	};
 
-	
+
+	fragment@11 {
+		target = <&uart1>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+
 	__overrides__ {
-		gpio = <&pwm_gpio>,"gpios:27",
-		       <&pwm_gpio_pins>,"brcm,pins:0",
-		       /* modify reg values to allow multiple instantiation */
-		       <&pwm_gpio>,"reg:0",
-		       <&pwm_gpio_pins>,"reg:0";
+		gpio = <&pwm_gpio>,
+		       "gpios: 27",
+		       <&pwm_gpio_pins>,
+		       "brcm,pins: 0",
+		       <&pwm_gpio>,
+		       "reg: 0",
+		       <&pwm_gpio_pins>,
+		       "reg: 0";
 
-		rotate = <&panel>, "rotation:90";
+		// rotate = <&panel>, "rotation: 90";
 	};
 };

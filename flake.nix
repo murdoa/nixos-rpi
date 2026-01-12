@@ -114,7 +114,6 @@
                 system = "aarch64-linux";
               };
             }
-            nixos-hardware.nixosModules.raspberry-pi-3
             "${nixpkgs}/nixos/modules/profiles/minimal.nix"
             ./repart/repart-pi3.nix
             ./configuration.nix
