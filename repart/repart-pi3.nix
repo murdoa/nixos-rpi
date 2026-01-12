@@ -38,7 +38,7 @@ in
   };
 
   hardware.deviceTree.enable = true;
-  hardware.deviceTree.name = "broadcom/bcm2837-rpi-3-a-plus.dtb";
+  hardware.deviceTree.name = "broadcom/bcm2837-rpi-3-b-plus.dtb";
 
   image.repart = {
     package = pkgs.buildPackages.systemd.overrideAttrs (old: {

@@ -43,6 +43,10 @@ lib.overrideDerivation
       }
       // (args.features or { });
 
+      structuredExtraConfig = with lib.kernel; {
+        PWM_GPIO = yes;
+      };
+
       isLTS = true;
 
       extraMeta =
