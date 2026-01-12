@@ -7,6 +7,8 @@
 }:
 {
   imports = [
+    ./graphics.nix
+    # ./splash.nix
   ];
 
   nixpkgs.overlays = [
@@ -37,7 +39,6 @@
     "video=simpledrm:off"
     "vc4.force_hotplug=1"
     "drm.debug=0x1"
-    # "console=tty1"
   ];
 
   hardware.deviceTree.filter = "*rpi*.dtb";
@@ -69,7 +70,6 @@
   environment.systemPackages = with pkgs; [
     vim
     git
-    libdrm
   ];
   services.openssh.enable = true;
   networking.hostName = "nixos";
