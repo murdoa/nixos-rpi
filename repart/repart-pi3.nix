@@ -16,6 +16,7 @@ let
     arm_64bit=1
     enable_uart=1
     avoid_warnings=1
+    disable_fw_kms_setup=1
   '';
 in
 {

@@ -29,6 +29,24 @@
 		target-path = "/";
 		__overlay__ {
 
+			lcd_vcc_3v3: regulator-vcc-3v3 {
+				compatible = "regulator-fixed";
+				regulator-name = "vcc_3v3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+				regulator-boot-on;
+			};
+
+			lcd_iovcc_3v3: regulator-iovcc-3v3 {
+				compatible = "regulator-fixed";
+				regulator-name = "iovcc_3v3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+				regulator-boot-on;
+			};
+
 			backlight: backlight {
 				compatible = "pwm-backlight";
 				pwms = <&pwm_gpio 0 5000000 0>;
@@ -56,11 +74,17 @@
 				panel: display@0 {
 					reg = <0>;
 					/* 100 kHz */
+					pinctrl-0 = <&lcd_pins>;
+					pinctrl-names = "default";
 					spi-max-frequency = <100000>;
 					backlight = <&backlight>;
 					rotation = <90>;
+					reset-gpios = <&gpio 20 GPIO_ACTIVE_HIGH>;
 
-					compatible = "muroda,er-tft-4.58-1";
+					VCC-supply = <&lcd_vcc_3v3>;
+					IOVCC-supply = <&lcd_iovcc_3v3>;
+
+					compatible = "murdoa,er-tft-4.58-1";
 
 					port {
 						panel_in: endpoint {
@@ -94,7 +118,12 @@
 			spi_pins: er_tft_4_58_1_spi_pins {
 				brcm,pins = <25 26 24>;
 				brcm,pull = <BCM2835_PUD_UP BCM2835_PUD_UP BCM2835_PUD_OFF>;
-				brcm,function = <0>;
+				brcm,function = <1 1 1>;
+			};
+			lcd_pins: er_tft_4_58_1_lcd_pins {
+				brcm,pins = <20>;
+				brcm,pull = <BCM2835_PUD_UP>;
+				brcm,function = <1>;
 			};
 		};
 	};
@@ -157,15 +186,15 @@
 		};
 	};
 
-
+	// Disable unused I2C0 to free gpios
 	fragment@8 {
 		target = <&i2c0>;
 		__overlay__ {
-			/delete-property/ pinctrl-names;
-			/delete-property/ pinctrl-0;
+			status = "disabled";
 		};
 	};
 
+	// Disable unused I2C1 to free gpios
 	fragment@9 {
 		target = <&i2c1>;
 		__overlay__ {
@@ -180,25 +209,52 @@
 		};
 	};
 
-
+	// Disable UART0 to free gpios
 	fragment@11 {
 		target = <&uart1>;
 		__overlay__ {
 			status = "disabled";
 		};
 	};
+	
+	// Disable composite video output
+	// fragment@12 {
+	// 	target = <&vec>;
+	// 	__overlay__ {
+	// 		status = "disabled";
+	// 	};
+	// };
 
+	// // Increase CMA size to 256MB for framebuffer
+	// fragment@13 {
+	// 	target = <&cma>;
+	// 	__overlay__ {
+	// 		size = <0x10000000>;
+	// 	};
+	// };
+
+    // // No audio
+	// fragment@14 {
+	// 	target = <&hdmi>;
+	// 	__dormant__  {
+	// 		dmas;
+	// 	};
+	// };
+
+	// Disable HDMI
+	// fragment@14 {
+	// 	target = <&i2c2>;
+	// 	__overlay__ {
+	// 		status = "disabled";
+	// 	};
+	// };
+	// fragment@15 {
+	// 	target = <&hdmi>;
+	// 	__overlay__  {
+	// 		status = "disabled";
+	// 	};
+	// };
 
 	__overrides__ {
-		gpio = <&pwm_gpio>,
-		       "gpios: 27",
-		       <&pwm_gpio_pins>,
-		       "brcm,pins: 0",
-		       <&pwm_gpio>,
-		       "reg: 0",
-		       <&pwm_gpio_pins>,
-		       "reg: 0";
-
-		// rotate = <&panel>, "rotation: 90";
 	};
 };

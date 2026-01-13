@@ -12,7 +12,7 @@
   nix.optimise.automatic = true;
   nix.settings.auto-optimise-store = true;
 
-  boot.kernelPackages = lib.mkForce pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.kernelPatches = [
     {
@@ -22,9 +22,6 @@
   ];
 
   boot.kernelModules = [
-    "vc4"
-    # "vc4_hdmi"
-    "drm_kms_helper"
     "usbhid"
     "usb-storage"
   ];
@@ -34,16 +31,13 @@
   #   "vc4_hdmi"
   # ];
 
-  boot.blacklistedKernelModules = [
-    "simpledrm"
-  ];
-
   boot.kernelParams = [
-    "video=simpledrm:off"
-    "video=efifb:off"
+    # "video=simpledrm:off"
+    # "video=efifb:off"
     # "drm.debug=0x1"
     "console=tty1"
     "log_buf_len=128M"
+    "video=HDMI-A-1:d"
   ];
 
   hardware.deviceTree.filter = "*rpi*.dtb";
