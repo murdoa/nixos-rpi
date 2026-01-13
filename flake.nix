@@ -133,6 +133,10 @@
             type = "app";
             program = "${mkFlashScript images.pi0}/bin/flash";
           };
+          flash-result = {
+            type = "app";
+            program = "${mkFlashScript "result"}/bin/flash";
+          };
         };
 
       nixosConfigurations = {

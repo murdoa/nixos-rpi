@@ -8,7 +8,7 @@
 {
   imports = [
     ./graphics.nix
-    # ./splash.nix
+    ./splash.nix
   ];
 
   nix.optimise.automatic = true;
@@ -28,17 +28,8 @@
     "usb-storage"
   ];
 
-  # boot.initrd.kernelModules = [
-  #   "vc4"
-  #   "vc4_hdmi"
-  # ];
-
   boot.kernelParams = [
-    # "video=simpledrm:off"
-    # "video=efifb:off"
-    # "drm.debug=0x1"
     "console=tty1"
-    "log_buf_len=128M"
     "video=HDMI-A-1:d"
   ];
 
@@ -73,6 +64,9 @@
   services.openssh.enable = true;
   networking = {
     hostName = "nixos";
+
+    nameservers = [ "1.1.1.1" "9.9.9.9" ];
+    
     interfaces.enu1u1.ipv4.addresses = [
       {
         address = "192.168.0.157";
