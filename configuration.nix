@@ -7,6 +7,8 @@
 }:
 {
   imports = [
+    ./graphics.nix
+    # ./splash.nix
   ];
 
   nix.optimise.automatic = true;
