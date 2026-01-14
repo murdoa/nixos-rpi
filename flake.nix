@@ -1,18 +1,21 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixos-hardware.url = "github:nixos/nixos-hardware";
     ssh-keys = {
       url = "https://github.com/murdoa.keys";
       flake = false;
+    };
+    flutterApp = {
+      url = "github:murdoa/flutter_reference_app";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
   outputs =
     {
       self,
       nixpkgs,
-      nixos-hardware,
       ssh-keys,
+      flutterApp
     }@inputs:
     let
       # Systems that can be used as build hosts
@@ -37,6 +40,24 @@
           specialArgs = specialArgs // { inherit inputs; };
           modules =
             modules
+            ++ [
+              {
+                nixpkgs.overlays = [
+                  (final: prev: {
+                    flutter_reference_app = flutterApp.packages.${targetSystem}.default.overrideAttrs (oldAttrs: {
+                      extraWrapProgramArgs = ''
+                        --prefix LD_LIBRARY_PATH : ${
+                          final.lib.makeLibraryPath [
+                            final.mesa
+                            final.libglvnd
+                          ]
+                        }
+                      '';
+                    });
+                  })
+                ];
+              }
+            ]
             ++ nixpkgs.lib.optionals (buildSystem != targetSystem) [
               {
                 nixpkgs.crossSystem = {
@@ -79,16 +100,20 @@
         };
 
       # Generate packages for all supported build systems
-      packages = forAllSystems (system: {
-        # Cross-compiled images (default)
-        pi-image = images.pi4;
-        pi3-image = images.pi3;
-        pi0-image = images.pi0;
+      packages = forAllSystems (system:
+        {
+          # Cross-compiled images (default)
+          pi-image = images.pi4;
+          pi3-image = images.pi3;
+          pi0-image = images.pi0;
 
-        # Native build images (aarch64 only)
-        pi-image-native = images.pi4-native;
-        pi3-image-native = images.pi3-native;
-      });
+          # Native build images (aarch64 only)
+          pi-image-native = images.pi4-native;
+          pi3-image-native = images.pi3-native;
+
+          # Flutter app package
+          flutter = flutterApp.packages.${system}.default;
+        });
 
       apps.x86_64-linux =
         let
@@ -190,7 +215,6 @@
             inherit ssh-keys;
           };
           modules = [
-            nixos-hardware.nixosModules.raspberry-pi-4
             ./repart/repart.nix
             "${nixpkgs}/nixos/modules/profiles/minimal.nix"
             ./configuration.nix
@@ -205,7 +229,6 @@
             inherit ssh-keys;
           };
           modules = [
-            nixos-hardware.nixosModules.raspberry-pi-4
             ./repart/repart.nix
             "${nixpkgs}/nixos/modules/profiles/minimal.nix"
             ./configuration.nix

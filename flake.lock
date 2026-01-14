@@ -1,17 +1,41 @@
 {
   "nodes": {
-    "nixos-hardware": {
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems"
+      },
       "locked": {
-        "lastModified": 1757943327,
-        "narHash": "sha256-w6cDExPBqbq7fTLo4dZ1ozDGeq3yV6dSN4n/sAaS6OM=",
-        "owner": "nixos",
-        "repo": "nixos-hardware",
-        "rev": "67a709cfe5d0643dafd798b0b613ed579de8be05",
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
         "type": "github"
       },
       "original": {
-        "owner": "nixos",
-        "repo": "nixos-hardware",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "flutterApp": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1768353801,
+        "narHash": "sha256-mfmdTTGqbfV7V/Q5GNBpPboYj4aQA6V0ef6gVZGRYc4=",
+        "owner": "murdoa",
+        "repo": "flutter_reference_app",
+        "rev": "331a9e3c6292de0fed7eae7ce38580d0df3d0198",
+        "type": "github"
+      },
+      "original": {
+        "owner": "murdoa",
+        "repo": "flutter_reference_app",
         "type": "github"
       }
     },
@@ -33,7 +57,7 @@
     },
     "root": {
       "inputs": {
-        "nixos-hardware": "nixos-hardware",
+        "flutterApp": "flutterApp",
         "nixpkgs": "nixpkgs",
         "ssh-keys": "ssh-keys"
       }
@@ -48,6 +72,21 @@
       "original": {
         "type": "file",
         "url": "https://github.com/murdoa.keys"
+      }
+    },
+    "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
       }
     }
   },

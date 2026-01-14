@@ -5,7 +5,7 @@
   ...
 }:
 let
-  kioskCmd = "${pkgs.weston}/bin/weston-terminal";
+  kioskCmd = "${pkgs.flutter_reference_app}/bin/flutter_reference_app";
   startWeston = pkgs.writeShellScript "start-weston-kiosk" ''
     set -euo pipefail
 

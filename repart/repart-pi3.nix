@@ -42,11 +42,11 @@ in
   hardware.deviceTree.name = "broadcom/bcm2837-rpi-3-b-plus.dtb";
 
   image.repart = {
-    package = pkgs.buildPackages.systemd.overrideAttrs (old: {
-      # https://github.com/systemd/systemd/issues/35591
-      # https://github.com/util-linux/util-linux/issues/3353
-      patches = old.patches or [] ++ [ ./0001-repart-Support-named-GPT-flags-in-libfdisk.patch ];
-    });
+    # package = pkgs.buildPackages.systemd.overrideAttrs (old: {
+    #   # https://github.com/systemd/systemd/issues/35591
+    #   # https://github.com/util-linux/util-linux/issues/3353
+    #   patches = old.patches or [] ++ [ ./0001-repart-Support-named-GPT-flags-in-libfdisk.patch ];
+    # });
     name = "image";
     compression.enable = false;
     partitions = {
