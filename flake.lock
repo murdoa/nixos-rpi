@@ -26,11 +26,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1768353801,
-        "narHash": "sha256-mfmdTTGqbfV7V/Q5GNBpPboYj4aQA6V0ef6gVZGRYc4=",
+        "lastModified": 1768357896,
+        "narHash": "sha256-l/q4rXdDBTqZ/PdjeQT5dl5hBeVKHBIbPjKn5FPjVPE=",
         "owner": "murdoa",
         "repo": "flutter_reference_app",
-        "rev": "331a9e3c6292de0fed7eae7ce38580d0df3d0198",
+        "rev": "60f2c4aa9280ba82c60a11ae08d93666c0eb86af",
         "type": "github"
       },
       "original": {

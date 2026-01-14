@@ -1,0 +1,263 @@
+/*
+ * vc4-kms-dpi-er_tft_4_58_1.dts
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/bcm2835.h>
+
+/ {
+	compatible = "brcm,bcm2837";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			pwm_gpio: pwm_gpio@27 {
+				#pwm-cells = <3>;
+				compatible = "pwm-gpio";
+				pinctrl-names = "default";
+				pinctrl-0 = <&pwm_gpio_pins>;
+				gpios = <&gpio 27 0>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+
+			lcd_vcc_3v3: regulator-vcc-3v3 {
+				compatible = "regulator-fixed";
+				regulator-name = "vcc_3v3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+				regulator-boot-on;
+			};
+
+			lcd_iovcc_3v3: regulator-iovcc-3v3 {
+				compatible = "regulator-fixed";
+				regulator-name = "iovcc_3v3";
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+				regulator-boot-on;
+			};
+
+			backlight: backlight {
+				compatible = "pwm-backlight";
+				pwms = <&pwm_gpio 0 5000000 0>;
+
+				brightness-levels = <0 4 8 16 32 64 128 255>;
+				default-brightness-level = <3>;
+
+				// post-pwm-on-delay-ms = <10>;
+				// pwm-off-delay-ms = <10>;
+			};
+
+			spi {
+				compatible = "spi-gpio";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				pinctrl-0 = <&spi_pins>;
+				pinctrl-names = "default";
+
+				sck-gpios = <&gpio 25 GPIO_ACTIVE_HIGH>;
+				mosi-gpios = <&gpio 24 GPIO_ACTIVE_HIGH>;
+				cs-gpios = <&gpio 26 GPIO_ACTIVE_LOW>;
+				num-chipselects = <1>;
+				sck-idle-input;
+
+				panel: display@0 {
+					reg = <0>;
+					/* 100 kHz */
+					pinctrl-0 = <&lcd_pins>;
+					pinctrl-names = "default";
+					spi-max-frequency = <100000>;
+					backlight = <&backlight>;
+					rotation = <90>;
+					reset-gpios = <&gpio 20 GPIO_ACTIVE_HIGH>;
+
+					VCC-supply = <&lcd_vcc_3v3>;
+					IOVCC-supply = <&lcd_iovcc_3v3>;
+
+					compatible = "murdoa,er-tft-3.71-1";
+					
+					// RGB 565 16-bit
+					bus-format = <0x1017>;
+
+					port {
+						panel_in: endpoint {
+							remote-endpoint = <&dpi_out>;
+						};
+					};
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&dpi>;
+		__overlay__  {
+			status = "okay";
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&dpi_16bit_gpio0>;
+
+			port {
+				dpi_out: endpoint {
+					remote-endpoint = <&panel_in>;
+				};
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&gpio>;
+		__overlay__ {
+			spi_pins: er_tft_4_58_1_spi_pins {
+				brcm,pins = <25 26 24>;
+				brcm,pull = <BCM2835_PUD_UP BCM2835_PUD_UP BCM2835_PUD_OFF>;
+				brcm,function = <1 1 1>;
+			};
+			lcd_pins: er_tft_4_58_1_lcd_pins {
+				brcm,pins = <20>;
+				brcm,pull = <BCM2835_PUD_UP>;
+				brcm,function = <1>;
+			};
+		};
+	};
+
+	fragment@4 {
+		target-path = "/";
+		__overlay__ {
+			i2c_gpio: i2c@0 {
+				compatible = "i2c-gpio";
+				gpios = <&gpio 22 0 /* sda */
+				&gpio 23 0>; /* scl */
+				i2c-gpio,delay-us = <4>;        /* ~100 kHz */
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+		};
+	};
+
+	fragment@5 {
+		target = <&gpio>;
+		__overlay__ {
+			pwm_gpio_pins: pwm_gpio_pins@27 {
+				brcm,pins = <27>; /* gpio 4 */
+				brcm,function = <1>; /* output */
+				brcm,pull = <0>; /* pull-none */
+			};
+		};
+	};
+
+	fragment@6 {
+		target = <&gpio>;
+		__overlay__ {
+			dpi_16bit_gpio0: dpi_16bit_gpio0 {
+				brcm,pins = <0 1 2 3 4 5 6 7 8 9 10 11
+				12 13 14 15 16 17 18 19>;
+				brcm,function = <BCM2835_FSEL_ALT2>;
+			};
+		};
+	};
+
+
+	fragment@7 {
+		target = <&i2c_gpio>;
+		__overlay__ {
+			/* needed to avoid dtc warning */
+			#address-cells = <1>;
+			#size-cells = <0>;
+			ft6236_5d: ft6236@5d {
+				compatible = "goodix,gt911";
+				reg = <0x5d>;
+				interrupt-parent = <&gpio>;
+				interrupts = <21 2>;
+				touchscreen-size-x = <240>;
+				touchscreen-size-y = <960>;
+				touchscreen-x-mm = <29>;
+				touchscreen-y-mm = <92>;
+				// touchscreen-inverted-y;
+				// touchscreen-swapped-x-y;
+			};
+		};
+	};
+
+	// Disable unused I2C0 to free gpios
+	fragment@8 {
+		target = <&i2c0>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	// Disable unused I2C1 to free gpios
+	fragment@9 {
+		target = <&i2c1>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@10 {
+		target-path = "/aliases";
+		__overlay__ {
+			i2c_gpio = "/i2c@0";
+		};
+	};
+
+	// Disable UART0 to free gpios
+	fragment@11 {
+		target = <&uart1>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+	
+	// Disable composite video output
+	// fragment@12 {
+	// 	target = <&vec>;
+	// 	__overlay__ {
+	// 		status = "disabled";
+	// 	};
+	// };
+
+	// // Increase CMA size to 256MB for framebuffer
+	// fragment@13 {
+	// 	target = <&cma>;
+	// 	__overlay__ {
+	// 		size = <0x10000000>;
+	// 	};
+	// };
+
+    // // No audio
+	// fragment@14 {
+	// 	target = <&hdmi>;
+	// 	__dormant__  {
+	// 		dmas;
+	// 	};
+	// };
+
+	// Disable HDMI
+	// fragment@14 {
+	// 	target = <&i2c2>;
+	// 	__overlay__ {
+	// 		status = "disabled";
+	// 	};
+	// };
+	// fragment@15 {
+	// 	target = <&hdmi>;
+	// 	__overlay__  {
+	// 		status = "disabled";
+	// 	};
+	// };
+
+	__overrides__ {
+	};
+};

@@ -50,6 +50,7 @@
                           final.lib.makeLibraryPath [
                             final.mesa
                             final.libglvnd
+                            final.gtk3
                           ]
                         }
                       '';

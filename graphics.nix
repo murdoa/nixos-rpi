@@ -5,21 +5,36 @@
   ...
 }:
 let
-  kioskCmd = "${pkgs.flutter_reference_app}/bin/flutter_reference_app";
+  # kioskCmd = "${pkgs.flutter_reference_app}/bin/flutter_reference_app";
+  kioskCmd = "${pkgs.kitty}/bin/kitty";
+  kioskAppScript = pkgs.writeShellScript "kiosk-app" ''
+    set -euo pipefail
+ 
+    eglinfo -B
+
+    exec ${kioskCmd}
+  '';
   startWeston = pkgs.writeShellScript "start-weston-kiosk" ''
     set -euo pipefail
 
     export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    export EGL_LOG_LEVEL=debug
+    export WAYLAND_DEBUG=1
+    unset DISPLAY
 
     exec ${pkgs.weston}/bin/weston \
       --backend=drm-backend.so \
       --shell=kiosk-shell.so \
       --idle-time=0 \
       -- \
-      ${kioskCmd}
+      ${kioskAppScript}
   '';
 in
 {
+  services.seatd.enable = true;
+  # services.logind.enable = true;
+  # security.polkit.enable = true; 
+
   hardware.graphics.enable = true;
   hardware.graphics.extraPackages = with pkgs; [
     mesa
@@ -43,6 +58,7 @@ in
       "video"
       "input"
       "render"
+      "seat"
     ];
   };
 
