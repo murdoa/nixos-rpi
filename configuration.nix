@@ -7,6 +7,7 @@
 }:
 {
   imports = [
+    ./out-of-tree/default.nix
     ./graphics.nix
     ./splash.nix
   ];
@@ -14,18 +15,22 @@
   nix.optimise.automatic = true;
   nix.settings.auto-optimise-store = true;
 
+
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  boot.kernelPatches = [
-    {
-      name = "0001-st7701s-driver-er-tft-4-58-1";
-      patch = ./kernel-patches/0001-st7701s-driver-er-tft-4-58-1.patch;
-    }
-  ];
+  hardware.out-of-tree.panel-sitronix-st7701.enable = true;
+
+  # boot.kernelPatches = [
+  #   {
+  #     name = "0001-st7701s-driver-er-tft-4-58-1";
+  #     patch = ./kernel-patches/0001-st7701s-driver-er-tft-4-58-1.patch;
+  #   }
+  # ];
 
   boot.kernelModules = [
     "usbhid"
     "usb-storage"
+    "panel-sitronix-st7701"
   ];
 
   boot.kernelParams = [

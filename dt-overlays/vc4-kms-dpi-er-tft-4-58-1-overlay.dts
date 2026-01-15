@@ -85,6 +85,8 @@
 					IOVCC-supply = <&lcd_iovcc_3v3>;
 
 					compatible = "murdoa,er-tft-4.58-1";
+					
+					bus-format = <0x1017>;
 
 					port {
 						panel_in: endpoint {
