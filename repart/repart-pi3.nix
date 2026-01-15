@@ -36,6 +36,18 @@ in
   boot.loader = {
     generic-extlinux-compatible.enable = lib.mkForce false;
     grub.enable = lib.mkForce false;
+    systemd-boot.enable = lib.mkForce true;
+    efi.canTouchEfiVariables = false;
+  };
+
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "ext4";
+  };
+
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-label/ESP";
+    fsType = "vfat";
   };
 
   hardware.deviceTree.enable = true;
@@ -52,9 +64,16 @@ in
     partitions = {
       "01-esp" = {
         contents = {
-          "/EFI/BOOT/BOOT${lib.toUpper efiArch}.EFI".source = "${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${efiArch}.efi";
-          "/EFI/Linux/${config.system.boot.loader.ukiFile}".source = "${config.system.build.uki}/${config.system.boot.loader.ukiFile}";
+          # systemd-boot EFI binaries
+          "/EFI/BOOT/BOOT${lib.toUpper efiArch}.EFI".source =
+            "${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${efiArch}.efi";
+          "/EFI/systemd/systemd-boot${efiArch}.efi".source =
+            "${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${efiArch}.efi";
+          "/EFI/Linux/${config.system.boot.loader.ukiFile}".source =
+            "${config.system.build.uki}/${config.system.boot.loader.ukiFile}";
+          # U-Boot Second Stage Bootloader (Allows for UEFI booting)
           "/u-boot.bin".source = "${pkgs.ubootRaspberryPi3_64bit}/u-boot.bin";
+          # Raspberry Pi Required Boot Firmware
           "/config.txt".source = configTxt;
           "/".source = "${pkgs.raspberrypifw}/share/raspberrypi/boot";
         };
