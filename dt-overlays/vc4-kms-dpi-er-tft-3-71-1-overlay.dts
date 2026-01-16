@@ -174,18 +174,15 @@
 			/* needed to avoid dtc warning */
 			#address-cells = <1>;
 			#size-cells = <0>;
-			ft6236_5d: ft6236@5d {
-				// Not goodix gt911
-				// compatible = "goodix,gt911";
-				// reg = <0x5a>;
-				// interrupt-parent = <&gpio>;
-				// interrupts = <21 2>;
-				// touchscreen-size-x = <240>;
-				// touchscreen-size-y = <960>;
-				// touchscreen-x-mm = <29>;
-				// touchscreen-y-mm = <92>;
-				// touchscreen-inverted-y;
-				// touchscreen-swapped-x-y;
+			cst3240: touchscreen@5a {
+				compatible = "hynitron,cst3240";
+				reg = <0x5a>;
+				interrupt-parent = <&gpio>;
+				interrupts = <21 2>;
+				touchscreen-size-x = <240>;
+				touchscreen-size-y = <960>;
+				touchscreen-inverted-y;
+				touchscreen-swapped-x-y;
 			};
 		};
 	};

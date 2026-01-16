@@ -15,17 +15,10 @@
   nix.optimise.automatic = true;
   nix.settings.auto-optimise-store = true;
 
-
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   hardware.out-of-tree.panel-sitronix-st7701.enable = true;
-
-  # boot.kernelPatches = [
-  #   {
-  #     name = "0001-st7701s-driver-er-tft-4-58-1";
-  #     patch = ./kernel-patches/0001-st7701s-driver-er-tft-4-58-1.patch;
-  #   }
-  # ];
+  hardware.out-of-tree.touchscreen-hynitron-cst3240.enable = true;
 
   boot.kernelModules = [
     "usbhid"
@@ -40,9 +33,13 @@
 
   hardware.deviceTree.filter = "*rpi*.dtb";
   hardware.deviceTree.overlays = [
+    # {
+    #   name = "vc4-kms-dpi-er_tft_4_58_1";
+    #   dtsFile = ./dt-overlays/vc4-kms-dpi-er-tft-4-58-1-overlay.dts;
+    # }
     {
-      name = "vc4-kms-dpi-er_tft_4_58_1";
-      dtsFile = ./dt-overlays/vc4-kms-dpi-er-tft-4-58-1-overlay.dts;
+      name = "vc4-kms-dpi-er_tft_3_71_1";
+      dtsFile = ./dt-overlays/vc4-kms-dpi-er-tft-3-71-1-overlay.dts;
     }
   ];
 
