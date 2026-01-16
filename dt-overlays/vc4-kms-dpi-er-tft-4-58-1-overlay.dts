@@ -86,6 +86,7 @@
 
 					compatible = "murdoa,er-tft-4.58-1";
 					
+					// RGB 565 16-bit
 					bus-format = <0x1017>;
 
 					port {
