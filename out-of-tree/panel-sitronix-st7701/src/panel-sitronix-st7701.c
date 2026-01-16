@@ -1485,7 +1485,7 @@ static int st7701_probe(struct device *dev, int connector_type)
 	if (ret < 0)
 		return dev_err_probe(dev, ret, "Failed to get orientation\n");
 
-	ret = of_property_read_u32(dev->of_node, "bus_format", &st7701->bus_format);
+	ret = of_property_read_u32(dev->of_node, "bus-format", &st7701->bus_format);
 	if (ret == -EINVAL) {
 		st7701->bus_format = 0;
 	}
