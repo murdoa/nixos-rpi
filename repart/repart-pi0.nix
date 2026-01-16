@@ -60,11 +60,6 @@ in
   hardware.deviceTree.name = "bcm2835-rpi-zero-w.dtb";
 
   image.repart = {
-    package = pkgs.buildPackages.systemd.overrideAttrs (old: {
-      # https://github.com/systemd/systemd/issues/35591
-      # https://github.com/util-linux/util-linux/issues/3353
-      patches = old.patches or [] ++ [ ./0001-repart-Support-named-GPT-flags-in-libfdisk.patch ];
-    });
     name = "image";
     compression.enable = true;
     partitions = {
