@@ -67,7 +67,8 @@
       "boot.shell_on_fail"
       "udev.log_priority=3"
       "rd.systemd.show_status=auto"
-      "fbcon=map:1"
+      "fbcon=nodefer"
+      "vt.global_cursor_default=0"
       "console=tty1"
     ];
     # Hide the OS choice for bootloaders.

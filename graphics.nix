@@ -27,7 +27,7 @@ let
       --shell=kiosk-shell.so \
       --idle-time=0 \
       -- \
-      ${kioskAppScript}
+      ${pkgs.weston}/bin/weston-terminal
   '';
 in
 {
