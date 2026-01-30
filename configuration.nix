@@ -17,8 +17,37 @@
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  # sdImage.compressImage = false;
+
   hardware.out-of-tree.panel-sitronix-st7701.enable = true;
   hardware.out-of-tree.touchscreen-hynitron-cst3240.enable = true;
+
+  # fileSystems."/boot" = {
+  #   device = "/dev/disk/by-label/ESP";
+  #   fsType = "vfat";
+  #   options = [ "fmask=0077" "dmask=0077" ];
+  # };
+
+  boot.loader.timeout = 0;
+  boot.loader.grub.enable = lib.mkForce false;
+  boot.loader.generic-extlinux-compatible.enable = true;
+
+  fileSystems."/boot/firmware" = {
+    device = "/dev/disk/by-label/FIRMWARE";
+    fsType = "vfat";
+    # Alternatively, this could be removed from the configuration.
+    # The filesystem is not needed at runtime, it could be treated
+    # as an opaque blob instead of a discrete FAT32 filesystem.
+    options = [
+      "nofail"
+      "noauto"
+    ];
+  };
+
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/NIXOS_SD";
+    fsType = "ext4";
+  };
 
   boot.kernelModules = [
     "usbhid"
@@ -27,10 +56,22 @@
   ];
 
   boot.kernelParams = [
-    "console=tty1"
     "video=HDMI-A-1:d"
   ];
 
+  # boot.initrd.systemd.enable = true;
+  # boot.initrd.systemd.root = "gpt-auto";
+  # boot.initrd.supportedFilesystems.ext4 = true;
+  # boot.loader = {
+  #   grub.enable = lib.mkForce false;
+  #   generic-extlinux-compatible.enable = lib.mkForce true;
+  #   systemd-boot.enable = lib.mkForce false;
+  #   # systemd-boot.installDeviceTree = true;
+  #   efi.canTouchEfiVariables = false;
+  # };
+
+  hardware.deviceTree.enable = true;
+  hardware.deviceTree.name = "broadcom/bcm2837-rpi-3-b-plus.dtb";
   hardware.deviceTree.filter = "*rpi*.dtb";
   hardware.deviceTree.overlays = [
     # {
@@ -43,19 +84,6 @@
     }
   ];
 
-  boot.initrd.checkJournalingFS = false;
-  fileSystems."/boot" = {
-    device = "/dev/disk/by-label/ESP";
-    fsType = "vfat";
-    noCheck = true; # skip fsck on ESP
-  };
-
-  fileSystems."/" = {
-    device = "/dev/disk/by-label/nixos";
-    fsType = "ext4";
-    noCheck = true; # skip fsck on rootfs
-  };
-
   nixpkgs.config.allowUnfree = true;
   environment.systemPackages = with pkgs; [
     vim
@@ -67,8 +95,11 @@
   networking = {
     hostName = "nixos";
 
-    nameservers = [ "1.1.1.1" "9.9.9.9" ];
-    
+    nameservers = [
+      "1.1.1.1"
+      "9.9.9.9"
+    ];
+
     interfaces.enu1u1.ipv4.addresses = [
       {
         address = "192.168.0.157";
@@ -84,6 +115,7 @@
 
   users = {
     users.nixos = {
+      initialHashedPassword = lib.mkForce null;
       password = "default";
       isNormalUser = true;
       extraGroups = [ "wheel" ];

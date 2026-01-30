@@ -9,13 +9,18 @@
       url = "github:murdoa/flutter_reference_app";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     {
       self,
       nixpkgs,
       ssh-keys,
-      flutterApp
+      flutterApp,
+      nixos-generators,
     }@inputs:
     let
       # Systems that can be used as build hosts
@@ -37,10 +42,24 @@
         }:
         nixpkgs.lib.nixosSystem {
           system = buildSystem;
-          specialArgs = specialArgs // { inherit inputs; };
+          specialArgs = specialArgs // {
+            inherit inputs;
+          };
           modules =
             modules
             ++ [
+              {
+                imports = [
+                  nixos-generators.nixosModules.all-formats
+                ];
+                formatConfigs.sd-aarch64 =
+                  { config, lib, ... }:
+                  {
+                    # sdImage.compressImage = lib.mkForce false;
+                    # fileExtension = lib.mkForce ".img";
+                  };
+                nixpkgs.hostPlatform = buildSystem;
+              }
               {
                 nixpkgs.overlays = [
                   (final: prev: {
@@ -69,52 +88,21 @@
         };
     in
     rec {
-      images =
-        let
-          pkgsX86 = nixpkgs.legacyPackages.x86_64-linux;
-          pkgsAarch64 = nixpkgs.legacyPackages.aarch64-linux;
-        in
-        {
-          # Cross-compiled images (default)
-          pi4 = self.nixosConfigurations.pi4.config.system.build.image;
-          pi3 = self.nixosConfigurations.pi3.config.system.build.image.overrideAttrs {
-            preInstall = ''
-              ${pkgsX86.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3.config.image.baseName}.raw
-              echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${pkgsX86.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3.config.image.baseName}.raw
-            '';
-          };
-          pi0 = self.nixosConfigurations.pi0.config.system.build.image.overrideAttrs {
-            preInstall = ''
-              ${pkgsX86.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi0.config.image.baseName}.raw
-              echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${pkgsX86.util-linux}/bin/fdisk ${self.nixosConfigurations.pi0.config.image.baseName}.raw
-            '';
-          };
 
-          # Native build images (aarch64 only - armv6l not practical)
-          pi4-native = self.nixosConfigurations.pi4-native.config.system.build.image;
-          pi3-native = self.nixosConfigurations.pi3-native.config.system.build.image.overrideAttrs {
-            preInstall = ''
-              ${pkgsAarch64.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3-native.config.image.baseName}.raw
-              echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${pkgsAarch64.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3-native.config.image.baseName}.raw
-            '';
-          };
-        };
+      images = {
+        pi3 = nixosConfigurations.pi3.config.formats.sd-aarch64;
+        pi3-native = nixosConfigurations.pi3-native.config.formats.sd-aarch64;
+      };
 
       # Generate packages for all supported build systems
-      packages = forAllSystems (system:
-        {
-          # Cross-compiled images (default)
-          pi-image = images.pi4;
-          pi3-image = images.pi3;
-          pi0-image = images.pi0;
-
-          # Native build images (aarch64 only)
-          pi-image-native = images.pi4-native;
-          pi3-image-native = images.pi3-native;
-
-          # Flutter app package
-          flutter = flutterApp.packages.${system}.default;
-        });
+      packages = forAllSystems (system: {
+        # Cross-compiled images (default)
+        pi3-image = images.pi3.out;
+        # Native build images (aarch64 only)
+        pi3-image-native = images.pi3-image-native.out;
+        # Flutter app package
+        flutter = flutterApp.packages.${system}.default;
+      });
 
       apps.x86_64-linux =
         let
@@ -129,7 +117,10 @@
                 exit 1
               fi
               DEVICE="$1"
-              IMAGE="${image}/image.raw"
+              IMAGE=$(readlink -f "${image.out}/${image.config.image.fileName}")
+
+              UNCOMPRESSED_SIZE="$(zstd -dc $IMAGE | wc -c)"
+
 
               if [ ! -e "$DEVICE" ]; then
                 echo "Error: Device $DEVICE does not exist"
@@ -142,44 +133,28 @@
               fi
 
               echo "Flashing $IMAGE to $DEVICE..."
-              ${pkgs.pv}/bin/pv -s "$(stat -c%s "$IMAGE")" "$IMAGE" | sudo ${pkgs.coreutils}/bin/dd of="$DEVICE" bs=8M oflag=direct status=none && sync
+              ${pkgs.coreutils}/bin/cat -- "$IMAGE" \
+            | ${pkgs.zstd}/bin/zstd -d -c \
+            | ${pkgs.pv}/bin/pv -s "$UNCOMPRESSED_SIZE" \
+            | sudo ${pkgs.coreutils}/bin/dd of="$DEVICE" bs=8M oflag=direct status=none
+
+              sync
+
               echo "Done!"
             '';
         in
         {
-          flash-pi4 = {
-            type = "app";
-            program = "${mkFlashScript images.pi4}/bin/flash";
-          };
           flash-pi3 = {
             type = "app";
             program = "${mkFlashScript images.pi3}/bin/flash";
           };
-          flash-pi0 = {
+          flash-pi3-native = {
             type = "app";
-            program = "${mkFlashScript images.pi0}/bin/flash";
-          };
-          flash-result = {
-            type = "app";
-            program = "${mkFlashScript "result"}/bin/flash";
+            program = "${mkFlashScript images.pi3-native}/bin/flash";
           };
         };
 
       nixosConfigurations = {
-        # Pi Zero - cross-compiled only (armv6l not a practical build system)
-        pi0 = mkPiConfig {
-          buildSystem = "x86_64-linux";
-          targetSystem = "armv6l-linux";
-          specialArgs = {
-            inherit ssh-keys;
-          };
-          modules = [
-            "${nixpkgs}/nixos/modules/profiles/minimal.nix"
-            ./repart/repart-pi0.nix
-            ./configuration.nix
-          ];
-        };
-
         # Pi 3 - cross-compiled from x86_64
         pi3 = mkPiConfig {
           buildSystem = "x86_64-linux";
@@ -189,7 +164,6 @@
           };
           modules = [
             "${nixpkgs}/nixos/modules/profiles/minimal.nix"
-            ./repart/repart-pi3.nix
             ./configuration.nix
           ];
         };
@@ -202,35 +176,6 @@
             inherit ssh-keys;
           };
           modules = [
-            "${nixpkgs}/nixos/modules/profiles/minimal.nix"
-            ./repart/repart-pi3.nix
-            ./configuration.nix
-          ];
-        };
-
-        # Pi 4 - cross-compiled from x86_64
-        pi4 = mkPiConfig {
-          buildSystem = "x86_64-linux";
-          targetSystem = "aarch64-linux";
-          specialArgs = {
-            inherit ssh-keys;
-          };
-          modules = [
-            ./repart/repart.nix
-            "${nixpkgs}/nixos/modules/profiles/minimal.nix"
-            ./configuration.nix
-          ];
-        };
-
-        # Pi 4 - native build on aarch64
-        pi4-native = mkPiConfig {
-          buildSystem = "aarch64-linux";
-          targetSystem = "aarch64-linux";
-          specialArgs = {
-            inherit ssh-keys;
-          };
-          modules = [
-            ./repart/repart.nix
             "${nixpkgs}/nixos/modules/profiles/minimal.nix"
             ./configuration.nix
           ];

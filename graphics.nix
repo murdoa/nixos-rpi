@@ -27,7 +27,7 @@ let
       --shell=kiosk-shell.so \
       --idle-time=0 \
       -- \
-      ${pkgs.weston}/bin/weston-terminal
+      ${kioskAppScript}/bin/kiosk-app
   '';
 in
 {
@@ -62,7 +62,7 @@ in
     ];
   };
 
-  services.getty.autologinUser = "kiosk";
+  services.getty.autologinUser = lib.mkForce "kiosk";
   systemd.services."getty@tty1".enable = true;
 
   systemd.user.services.weston-kiosk = {
