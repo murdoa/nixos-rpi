@@ -29,6 +29,13 @@ in
   hardware.deviceTree.enable = true;
   hardware.deviceTree.name = "broadcom/bcm2711-rpi-4-b.dtb";
 
+  hardware.raspberry-pi.boot = {
+    serialConsole = "ttyAMA0";
+    kernelConsoleParams = [
+      "console=tty1"
+    ];
+  };
+
   image.hybridMbr = lib.mkForce false;
 
   image.repart = {
@@ -41,6 +48,7 @@ in
           "/u-boot.bin".source = "${pkgs.ubootRaspberryPi4_64bit}/u-boot.bin";
           "/armstub8-gic.bin".source = "${pkgs.raspberrypi-armstubs}/armstub8-gic.bin";
           "/config.txt".source = configTxt;
+          "/cmdline.txt".source = config.hardware.raspberry-pi.boot.cmdlineFile;
           "/".source = "${pkgs.raspberrypifw}/share/raspberrypi/boot";
         };
         repartConfig = {

@@ -1,5 +1,7 @@
 { pkgs, lib, ... }:
 {
+  imports = [ ./raspberry-pi/silent-boot.nix ];
+
   options.image.hybridMbr = lib.mkOption {
     type = lib.types.bool;
     default = false;

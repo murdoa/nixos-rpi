@@ -29,10 +29,17 @@ in
     efi.canTouchEfiVariables = false;
   };
 
+  hardware.raspberry-pi.boot = {
+    serialConsole = "ttyAMA0";
+    kernelConsoleParams = [
+      "console=ttyAMA0,115200"
+      "console=tty1"
+      "earlycon=pl011,0x3f201000"
+    ];
+  };
+
   boot.kernelParams = [
-    "console=ttyAMA0,115200"
-    "console=tty1"
-    "earlycon=pl011,0x3f201000"
+    "8250.nr_uarts=0"
   ];
 
   hardware.deviceTree.enable = true;
@@ -50,6 +57,7 @@ in
           "/EFI/Linux/${config.system.boot.loader.ukiFile}".source = "${config.system.build.uki}/${config.system.boot.loader.ukiFile}";
           "/u-boot.bin".source = "${pkgs.ubootRaspberryPi3_64bit}/u-boot.bin";
           "/config.txt".source = configTxt;
+          "/cmdline.txt".source = config.hardware.raspberry-pi.boot.cmdlineFile;
           "/".source = "${pkgs.raspberrypifw}/share/raspberrypi/boot";
         };
         repartConfig = {

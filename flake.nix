@@ -25,6 +25,7 @@
 
       nixosModules = {
         base = import ./modules/base.nix;
+        raspberry-pi-silent-boot = import ./modules/raspberry-pi/silent-boot.nix;
         pi0-image = import ./boards/raspberry-pi/pi0-image.nix;
         pi3-common-image = import ./boards/raspberry-pi/pi3-common-image.nix;
         pi4-image = import ./boards/raspberry-pi/pi4-image.nix;

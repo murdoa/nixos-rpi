@@ -46,6 +46,14 @@ in
   hardware.deviceTree.enable = true;
   hardware.deviceTree.name = "bcm2835-rpi-zero-w.dtb";
 
+  hardware.raspberry-pi.boot = {
+    serialConsole = "ttyAMA0";
+    kernelConsoleParams = [
+      "console=ttyAMA0,115200"
+      "console=tty1"
+    ];
+  };
+
   image.hybridMbr = lib.mkForce true;
 
   image.repart = {
@@ -58,6 +66,7 @@ in
           "/EFI/Linux/${config.system.boot.loader.ukiFile}".source = "${config.system.build.uki}/${config.system.boot.loader.ukiFile}";
           "/u-boot.bin".source = "${pkgs.ubootRaspberryPiZero}/u-boot.bin";
           "/config.txt".source = configTxt;
+          "/cmdline.txt".source = config.hardware.raspberry-pi.boot.cmdlineFile;
           "/".source = "${pkgs.raspberrypifw}/share/raspberrypi/boot";
         };
         repartConfig = {

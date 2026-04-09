@@ -27,6 +27,7 @@ It currently targets Raspberry Pi boards that boot via the Raspberry Pi firmware
   - explicit serial kernel parameters
   - `core_freq=250`
   - `enable_uart=1`
+- **Optional silent serial boot mode** for deployments where UART is wired to external equipment and boot noise is forbidden
 
 ## Quick start
 
@@ -229,6 +230,29 @@ Pi 3 boards need a little extra help for reliable serial console output. This re
 - `core_freq=250`
 
 These settings help avoid mini-UART clock drift during boot.
+
+### Silent serial boot
+
+For deployments where the UART pins are connected to another device and must stay quiet during boot, enable:
+
+```nix
+{
+  hardware.raspberry-pi.silentSerialBoot.enable = true;
+}
+```
+
+This reusable module centralizes the policy and board modules only provide board-specific serial metadata.
+
+When enabled, it:
+
+- suppresses kernel and initrd verbosity
+- disables serial getty on the board console
+- removes board-specific serial console kernel arguments
+- emits a `cmdline.txt` with `console=null` and quiet/loglevel suppression
+
+Exported module:
+
+- `nixosModules.raspberry-pi-silent-boot`
 
 ## Default login
 
