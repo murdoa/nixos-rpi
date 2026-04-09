@@ -45,6 +45,13 @@ nix run .#flash-pi3 -- /dev/sdX
 nix run .#flash-pi4 -- /dev/sdX
 ```
 
+Native-image flash apps are also available from an `x86_64-linux` host:
+
+```bash
+nix run .#flash-pi3-native -- /dev/sdX
+nix run .#flash-pi4-native -- /dev/sdX
+```
+
 ## Layout
 
 - `hosts/` - top-level board configs

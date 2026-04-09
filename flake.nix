@@ -87,9 +87,26 @@
       });
 
       apps.x86_64-linux = {
-        flash-pi3 = mkFlashApp self.images.pi3;
-        flash-pi4 = mkFlashApp self.images.pi4;
-        flash-pi0 = mkFlashApp self.images.pi0;
+        flash-pi3 = mkFlashApp {
+          name = "flash-pi3";
+          image = self.images.pi3;
+        };
+        flash-pi4 = mkFlashApp {
+          name = "flash-pi4";
+          image = self.images.pi4;
+        };
+        flash-pi0 = mkFlashApp {
+          name = "flash-pi0";
+          image = self.images.pi0;
+        };
+        flash-pi3-native = mkFlashApp {
+          name = "flash-pi3-native";
+          image = self.images.pi3-native;
+        };
+        flash-pi4-native = mkFlashApp {
+          name = "flash-pi4-native";
+          image = self.images.pi4-native;
+        };
       };
 
       templates.default = {
