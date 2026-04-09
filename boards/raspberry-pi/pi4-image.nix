@@ -38,6 +38,7 @@ let
       exit 1
     fi
 
+    toplevel="$1"
     boot_mount=${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint}
     tmp="$(${pkgs.coreutils}/bin/mktemp -d -t raspberry-pi-boot.XXXXXX)"
     trap '${pkgs.coreutils}/bin/rm -rf "$tmp"' EXIT
