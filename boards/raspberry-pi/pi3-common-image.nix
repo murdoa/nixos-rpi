@@ -37,6 +37,8 @@ in
 
   hardware.deviceTree.enable = true;
 
+  image.hybridMbr = lib.mkForce true;
+
   image.repart = {
     name = "image";
     compression.enable = false;

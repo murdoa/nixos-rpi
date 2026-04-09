@@ -29,6 +29,8 @@ in
   hardware.deviceTree.enable = true;
   hardware.deviceTree.name = "broadcom/bcm2711-rpi-4-b.dtb";
 
+  image.hybridMbr = lib.mkForce false;
+
   image.repart = {
     name = "image";
     partitions = {

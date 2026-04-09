@@ -46,6 +46,8 @@ in
   hardware.deviceTree.enable = true;
   hardware.deviceTree.name = "bcm2835-rpi-zero-w.dtb";
 
+  image.hybridMbr = lib.mkForce true;
+
   image.repart = {
     name = "image";
     compression.enable = true;
