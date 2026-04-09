@@ -1,6 +1,10 @@
 { lib, config, pkgs, modulesPath, ... }:
 let
   efiArch = pkgs.stdenv.hostPlatform.efiArch;
+  ukiFile = config.system.boot.loader.ukiFile;
+  efiSource = "${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${efiArch}.efi";
+  firmwareSource = "${pkgs.raspberrypifw}/share/raspberrypi/boot";
+  uBootSource = "${pkgs.ubootRaspberryPiZero}/u-boot.bin";
   configTxt = pkgs.writeText "config.txt" ''
     [pi0]
     kernel=u-boot.bin
@@ -9,6 +13,52 @@ let
     [all]
     enable_uart=1
     avoid_warnings=1
+  '';
+
+  espContents = {
+    "/".source = firmwareSource;
+    "/EFI/BOOT/BOOT${lib.toUpper efiArch}.EFI".source = efiSource;
+    "/EFI/Linux/${ukiFile}".source = "${config.system.build.uki}/${ukiFile}";
+    "/u-boot.bin".source = uBootSource;
+    "/config.txt".source = configTxt;
+    "/cmdline.txt".source = config.hardware.raspberry-pi.boot.cmdlineFile;
+  };
+
+  installBootLoader = pkgs.writeShellScript "install-raspberry-pi-boot-partition" ''
+    set -euo pipefail
+
+    if [ "$#" -lt 1 ]; then
+      echo "usage: $0 <system-toplevel>" >&2
+      exit 1
+    fi
+
+    toplevel="$1"
+    boot_mount=${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint}
+    tmp="$(${pkgs.coreutils}/bin/mktemp -d -t raspberry-pi-boot.XXXXXX)"
+    trap '${pkgs.coreutils}/bin/rm -rf "$tmp"' EXIT
+
+    if ! mountpoint -q "$boot_mount"; then
+      echo "error: $boot_mount is not mounted" >&2
+      exit 1
+    fi
+
+    mkdir -p "$tmp/EFI/BOOT" "$tmp/EFI/Linux"
+    cp -r --no-preserve=mode,ownership ${lib.escapeShellArg firmwareSource}/. "$tmp/"
+    cp --no-preserve=mode,ownership ${lib.escapeShellArg efiSource} "$tmp/EFI/BOOT/BOOT${lib.toUpper efiArch}.EFI"
+    cp --no-preserve=mode,ownership "$toplevel/uki/${ukiFile}" "$tmp/EFI/Linux/${ukiFile}"
+    cp --no-preserve=mode,ownership ${lib.escapeShellArg uBootSource} "$tmp/u-boot.bin"
+    cp --no-preserve=mode,ownership ${lib.escapeShellArg configTxt} "$tmp/config.txt"
+    cp --no-preserve=mode,ownership ${lib.escapeShellArg config.hardware.raspberry-pi.boot.cmdlineFile} "$tmp/cmdline.txt"
+
+    ${pkgs.rsync}/bin/rsync \
+      -rLtD \
+      --delete \
+      --delete-excluded \
+      --no-owner \
+      --no-group \
+      --no-perms \
+      --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+      "$tmp/" "$boot_mount/"
   '';
 in
 {
@@ -41,6 +91,9 @@ in
   boot.loader = {
     generic-extlinux-compatible.enable = lib.mkForce false;
     grub.enable = lib.mkForce false;
+    external.enable = true;
+    external.installHook = installBootLoader;
+    efi.canTouchEfiVariables = false;
   };
 
   hardware.deviceTree.enable = true;
@@ -61,14 +114,7 @@ in
     compression.enable = true;
     partitions = {
       "01-esp" = {
-        contents = {
-          "/EFI/BOOT/BOOT${lib.toUpper efiArch}.EFI".source = "${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${efiArch}.efi";
-          "/EFI/Linux/${config.system.boot.loader.ukiFile}".source = "${config.system.build.uki}/${config.system.boot.loader.ukiFile}";
-          "/u-boot.bin".source = "${pkgs.ubootRaspberryPiZero}/u-boot.bin";
-          "/config.txt".source = configTxt;
-          "/cmdline.txt".source = config.hardware.raspberry-pi.boot.cmdlineFile;
-          "/".source = "${pkgs.raspberrypifw}/share/raspberrypi/boot";
-        };
+        contents = espContents;
         repartConfig = {
           Type = "esp";
           Format = "vfat";
