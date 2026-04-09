@@ -1,17 +1,95 @@
-# NixOS Raspberry Pi image template
+# nixos-rpi
 
-A minimal template for building NixOS images for Raspberry Pi boards, with first-class support for **Pi 3** and **Pi 4**.
+NixOS image builders and reusable flake modules for Raspberry Pi boards.
+
+This repo can be used in two ways:
+
+- **as a standalone flake** — build and flash Pi images directly from this repo
+- **as a library flake** — import `lib.mkRpiSystem`, `lib.mkFlashApp`, and `nixosModules.*` from another flake
+
+It currently targets Raspberry Pi boards that boot through the Raspberry Pi firmware + U-Boot + EFI/UKI path, with first-class support for **Pi 3B**, **Pi 3B+**, and **Pi 4**.
+
+## What's in the box
+
+- **Cross- and native-buildable NixOS images** for Raspberry Pi boards
+- **Board-specific boot/image modules** for Pi 3B, Pi 3B+, Pi 4, and experimental Pi Zero W
+- **Reusable flake library API**:
+  - `lib.mkRpiSystem`
+  - `lib.mkFlashApp`
+  - `lib.boards`
+- **Host-side flash apps** with safety checks:
+  - removable-device check
+  - interactive confirmation
+  - `/dev/disk/by-id/...` compatible
+- **Pi 3 serial-console stabilization** for boot debugging:
+  - explicit serial kernel params
+  - `core_freq=250`
+  - `enable_uart=1`
+
+## Quick start
+
+### Build images
+
+```bash
+# Pi 3B
+nix build .#packages.x86_64-linux.pi3b-image
+
+# Pi 3B+
+nix build .#packages.x86_64-linux.pi3bplus-image
+
+# Pi 4
+nix build .#packages.x86_64-linux.pi4-image
+```
+
+Native-image outputs are also available:
+
+```bash
+nix build .#packages.x86_64-linux.pi3b-image-native
+nix build .#packages.x86_64-linux.pi3bplus-image-native
+nix build .#packages.x86_64-linux.pi4-image-native
+```
+
+Legacy aliases remain:
+- `pi3-image` → Pi 3B+
+- `pi3-image-native` → Pi 3B+
+
+### Flash images
+
+```bash
+# Cross-built image outputs
+nix run .#flash-pi3b -- /dev/disk/by-id/...
+nix run .#flash-pi3bplus -- /dev/disk/by-id/...
+nix run .#flash-pi4 -- /dev/disk/by-id/...
+
+# Native-built image outputs (still flashed from an x86_64 host)
+nix run .#flash-pi3b-native -- /dev/disk/by-id/...
+nix run .#flash-pi3bplus-native -- /dev/disk/by-id/...
+nix run .#flash-pi4-native -- /dev/disk/by-id/...
+```
+
+Flash scripts are interactive and refuse non-removable devices.
+
+Legacy aliases remain:
+- `flash-pi3` → Pi 3B+
+- `flash-pi3-native` → Pi 3B+
 
 ## Supported boards
 
-- Raspberry Pi 3B
-- Raspberry Pi 3B+
-- Raspberry Pi 4
-- Raspberry Pi Zero W (experimental)
+| Board | Target arch | Status |
+|---|---|---|
+| Raspberry Pi 3B | `aarch64-linux` | supported |
+| Raspberry Pi 3B+ | `aarch64-linux` | supported |
+| Raspberry Pi 4 | `aarch64-linux` | supported |
+| Raspberry Pi Zero W | `armv6l-linux` | experimental |
 
-## Build requirements
+## Build hosts
 
-On NixOS hosts, enable binfmt for aarch64 builds:
+| Build host | Supported |
+|---|---|
+| `x86_64-linux` | yes |
+| `aarch64-linux` | yes |
+
+On NixOS hosts, enable binfmt for aarch64 builds if needed:
 
 ```nix
 {
@@ -19,62 +97,142 @@ On NixOS hosts, enable binfmt for aarch64 builds:
 }
 ```
 
-## Build images
+## Project structure
 
-### Pi 3B
-
-```bash
-nix build .#packages.x86_64-linux.pi3b-image
+```text
+├── flake.nix
+├── flake.lock
+├── README.md
+├── lib/
+│   ├── default.nix          # exported library API
+│   ├── boards.nix           # board metadata
+│   ├── mk-system.nix        # mkRpiSystem
+│   └── flash-app.nix        # mkFlashApp
+├── modules/
+│   └── base.nix             # reusable base system defaults
+├── boards/raspberry-pi/
+│   ├── pi0-image.nix
+│   ├── pi3-common-image.nix
+│   └── pi4-image.nix
+├── hosts/
+│   ├── pi0.nix
+│   ├── pi3.nix              # alias to pi3bplus
+│   ├── pi3b.nix
+│   ├── pi3bplus.nix
+│   └── pi4.nix
+└── examples/
+    └── README.md
 ```
 
-### Pi 3B+
+## Library usage
 
-```bash
-nix build .#packages.x86_64-linux.pi3bplus-image
+This flake exposes:
+
+### `lib.mkRpiSystem`
+Build a NixOS system for a given board.
+
+Example from another flake:
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    rpi.url = "path:/path/to/nixos-rpi";
+  };
+
+  outputs = { self, nixpkgs, rpi, ... }: {
+    nixosConfigurations.my-pi3b = rpi.lib.mkRpiSystem {
+      buildSystem = "x86_64-linux";
+      board = "pi3b";
+      modules = [
+        {
+          networking.hostName = "my-pi3b";
+          services.openssh.enable = true;
+        }
+      ];
+    };
+  };
+}
 ```
 
-`pi3-image` remains as an alias to the Pi 3B+ image.
+### `lib.mkFlashApp`
+Create a host-side flash app for an image output.
 
-### Pi 4
+Example:
 
-```bash
-nix build .#packages.x86_64-linux.pi4-image
+```nix
+apps.x86_64-linux.flash-my-pi3b = rpi.lib.mkFlashApp {
+  name = "flash-my-pi3b";
+  image = self.packages.x86_64-linux.my-pi3b-image;
+};
 ```
 
-### Pi 0 (experimental)
+### `lib.boards`
+Board metadata used by `mkRpiSystem`, including:
+- target system
+- default host module
+- image naming
+- hybrid MBR requirement
 
-```bash
-nix build .#packages.x86_64-linux.pi0-image
+### `nixosModules`
+Available exported modules:
+- `base`
+- `pi0-image`
+- `pi3-common-image`
+- `pi3`
+- `pi3b`
+- `pi3bplus`
+- `pi4`
+- `pi4-image`
+
+This makes it possible to build the same logical system for multiple Pi boards by reusing a common module list and changing only `board = ...`.
+
+## Boot path
+
+### Pi 3 / Pi 4
+
+Boot chain is:
+
+```text
+Raspberry Pi firmware -> U-Boot -> EFI/systemd-boot -> UKI -> NixOS
 ```
 
-## Flashing
+### Pi 3 serial notes
 
-```bash
-nix run .#flash-pi3b -- /dev/sdX
-nix run .#flash-pi3bplus -- /dev/sdX
-nix run .#flash-pi4 -- /dev/sdX
-```
+Pi 3 boards are annoying little bastards when it comes to serial console routing. This repo includes Pi 3-specific serial stabilization:
 
-Native-image flash apps are also available from an `x86_64-linux` host:
+- `console=ttyAMA0,115200`
+- `earlycon=pl011,0x3f201000`
+- `enable_uart=1`
+- `core_freq=250`
 
-```bash
-nix run .#flash-pi3b-native -- /dev/sdX
-nix run .#flash-pi3bplus-native -- /dev/sdX
-nix run .#flash-pi4-native -- /dev/sdX
-```
-
-`flash-pi3` and `flash-pi3-native` remain as aliases to the Pi 3B+ variants.
-
-## Layout
-
-- `hosts/` - top-level board configs
-- `modules/` - reusable generic modules
-- `boards/raspberry-pi/` - board-specific image/boot logic
-- `examples/` - optional product-specific features
+This is specifically to avoid the classic Pi 3 mini-UART / clock-drift garbage during boot.
 
 ## Default login
 
-- user: `nixos`
-- password: `nixos`
+Default image credentials are:
 
-Change that before shipping anything that touches the public internet. Obviously.
+- **user:** `nixos`
+- **password:** `nixos`
+
+Change that before exposing the board to anything except your own LAN and bad decisions.
+
+## Status
+
+Current status:
+
+- Pi 3B image support: implemented
+- Pi 3B+ image support: implemented
+- Pi 4 image support: implemented
+- Pi 0 support: experimental
+- library API (`lib.mkRpiSystem`, `lib.mkFlashApp`, `nixosModules`): implemented
+
+Known caveats:
+
+- Pi Zero support is still experimental and more cursed than the rest
+- Pi 3 and Pi 3B+ are now split explicitly because they are similar enough to be annoying and different enough to waste your evening
+- flash apps are host-side convenience wrappers, not magical deploy tools
+
+## Why this exists
+
+Because building Raspberry Pi NixOS images should not require copy-pasting half a broken repo, re-deriving board quirks from first principles, and sacrificing an SD card to the firmware gods every time.

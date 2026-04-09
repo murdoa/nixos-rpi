@@ -15,63 +15,68 @@
       ];
       forAllSystems = lib.genAttrs supportedBuildSystems;
 
-      mkRpiSystem = import ./lib/mk-system.nix { inherit nixpkgs; };
-      mkFlashApp = import ./lib/flash-app.nix { inherit nixpkgs; };
+      rpiLib = import ./lib { inherit nixpkgs; };
+      mkRpiSystem = rpiLib.mkRpiSystem;
+      mkFlashApp = rpiLib.mkFlashApp;
     in
     {
+      lib = rpiLib;
+
+      nixosModules = {
+        base = import ./modules/base.nix;
+        pi0-image = import ./boards/raspberry-pi/pi0-image.nix;
+        pi3-common-image = import ./boards/raspberry-pi/pi3-common-image.nix;
+        pi4-image = import ./boards/raspberry-pi/pi4-image.nix;
+        pi3 = import ./hosts/pi3.nix;
+        pi3b = import ./hosts/pi3b.nix;
+        pi3bplus = import ./hosts/pi3bplus.nix;
+        pi4 = import ./hosts/pi4.nix;
+      };
+
       nixosConfigurations = {
         pi3 = mkRpiSystem {
           buildSystem = "x86_64-linux";
-          targetSystem = "aarch64-linux";
-          modules = [ ./hosts/pi3.nix ];
+          board = "pi3";
         };
 
         pi3-native = mkRpiSystem {
           buildSystem = "aarch64-linux";
-          targetSystem = "aarch64-linux";
-          modules = [ ./hosts/pi3.nix ];
+          board = "pi3";
         };
 
         pi3b = mkRpiSystem {
           buildSystem = "x86_64-linux";
-          targetSystem = "aarch64-linux";
-          modules = [ ./hosts/pi3b.nix ];
+          board = "pi3b";
         };
 
         pi3b-native = mkRpiSystem {
           buildSystem = "aarch64-linux";
-          targetSystem = "aarch64-linux";
-          modules = [ ./hosts/pi3b.nix ];
+          board = "pi3b";
         };
 
         pi3bplus = mkRpiSystem {
           buildSystem = "x86_64-linux";
-          targetSystem = "aarch64-linux";
-          modules = [ ./hosts/pi3bplus.nix ];
+          board = "pi3bplus";
         };
 
         pi3bplus-native = mkRpiSystem {
           buildSystem = "aarch64-linux";
-          targetSystem = "aarch64-linux";
-          modules = [ ./hosts/pi3bplus.nix ];
+          board = "pi3bplus";
         };
 
         pi4 = mkRpiSystem {
           buildSystem = "x86_64-linux";
-          targetSystem = "aarch64-linux";
-          modules = [ ./hosts/pi4.nix ];
+          board = "pi4";
         };
 
         pi4-native = mkRpiSystem {
           buildSystem = "aarch64-linux";
-          targetSystem = "aarch64-linux";
-          modules = [ ./hosts/pi4.nix ];
+          board = "pi4";
         };
 
         pi0 = mkRpiSystem {
           buildSystem = "x86_64-linux";
-          targetSystem = "armv6l-linux";
-          modules = [ ./hosts/pi0.nix ];
+          board = "pi0";
         };
       };
 
