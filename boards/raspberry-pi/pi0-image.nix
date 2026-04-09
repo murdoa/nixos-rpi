@@ -32,7 +32,6 @@ let
       exit 1
     fi
 
-    toplevel="$1"
     boot_mount=${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint}
     tmp="$(${pkgs.coreutils}/bin/mktemp -d -t raspberry-pi-boot.XXXXXX)"
     trap '${pkgs.coreutils}/bin/rm -rf "$tmp"' EXIT
@@ -45,7 +44,15 @@ let
     mkdir -p "$tmp/EFI/BOOT" "$tmp/EFI/Linux"
     cp -r --no-preserve=mode,ownership ${lib.escapeShellArg firmwareSource}/. "$tmp/"
     cp --no-preserve=mode,ownership ${lib.escapeShellArg efiSource} "$tmp/EFI/BOOT/BOOT${lib.toUpper efiArch}.EFI"
-    cp --no-preserve=mode,ownership "$toplevel/uki/${ukiFile}" "$tmp/EFI/Linux/${ukiFile}"
+    uki_source="$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".initrd // empty' "$toplevel/boot.json")"
+    if [ -z "$uki_source" ] || [ "$uki_source" = "null" ]; then
+      uki_source="$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernel // empty' "$toplevel/boot.json")"
+    fi
+    if [ -z "$uki_source" ] || [ "$uki_source" = "null" ]; then
+      echo "error: could not determine UKI path from $toplevel/boot.json" >&2
+      exit 1
+    fi
+    cp --no-preserve=mode,ownership "$uki_source" "$tmp/EFI/Linux/${ukiFile}"
     cp --no-preserve=mode,ownership ${lib.escapeShellArg uBootSource} "$tmp/u-boot.bin"
     cp --no-preserve=mode,ownership ${lib.escapeShellArg configTxt} "$tmp/config.txt"
     cp --no-preserve=mode,ownership ${lib.escapeShellArg config.hardware.raspberry-pi.boot.cmdlineFile} "$tmp/cmdline.txt"
