@@ -18,6 +18,7 @@
       rpiLib = import ./lib { inherit nixpkgs; };
       mkRpiSystem = rpiLib.mkRpiSystem;
       mkFlashApp = rpiLib.mkFlashApp;
+      mkImage = rpiLib.mkImage;
     in
     {
       lib = rpiLib;
@@ -81,57 +82,15 @@
       };
 
       images = {
-        pi3 = self.nixosConfigurations.pi3.config.system.build.image.overrideAttrs (old: {
-          preInstall = (old.preInstall or "") + ''
-            ${nixpkgs.legacyPackages.x86_64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3.config.image.baseName}.raw
-            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.x86_64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3.config.image.baseName}.raw
-          '';
-        });
-
-        pi3-native = self.nixosConfigurations.pi3-native.config.system.build.image.overrideAttrs (old: {
-          preInstall = (old.preInstall or "") + ''
-            ${nixpkgs.legacyPackages.aarch64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3-native.config.image.baseName}.raw
-            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.aarch64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3-native.config.image.baseName}.raw
-          '';
-        });
-
-        pi3b = self.nixosConfigurations.pi3b.config.system.build.image.overrideAttrs (old: {
-          preInstall = (old.preInstall or "") + ''
-            ${nixpkgs.legacyPackages.x86_64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3b.config.image.baseName}.raw
-            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.x86_64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3b.config.image.baseName}.raw
-          '';
-        });
-
-        pi3b-native = self.nixosConfigurations.pi3b-native.config.system.build.image.overrideAttrs (old: {
-          preInstall = (old.preInstall or "") + ''
-            ${nixpkgs.legacyPackages.aarch64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3b-native.config.image.baseName}.raw
-            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.aarch64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3b-native.config.image.baseName}.raw
-          '';
-        });
-
-        pi3bplus = self.nixosConfigurations.pi3bplus.config.system.build.image.overrideAttrs (old: {
-          preInstall = (old.preInstall or "") + ''
-            ${nixpkgs.legacyPackages.x86_64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3bplus.config.image.baseName}.raw
-            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.x86_64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3bplus.config.image.baseName}.raw
-          '';
-        });
-
-        pi3bplus-native = self.nixosConfigurations.pi3bplus-native.config.system.build.image.overrideAttrs (old: {
-          preInstall = (old.preInstall or "") + ''
-            ${nixpkgs.legacyPackages.aarch64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3bplus-native.config.image.baseName}.raw
-            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.aarch64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3bplus-native.config.image.baseName}.raw
-          '';
-        });
-
-        pi4 = self.nixosConfigurations.pi4.config.system.build.image;
-        pi4-native = self.nixosConfigurations.pi4-native.config.system.build.image;
-
-        pi0 = self.nixosConfigurations.pi0.config.system.build.image.overrideAttrs (old: {
-          preInstall = (old.preInstall or "") + ''
-            ${nixpkgs.legacyPackages.x86_64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi0.config.image.baseName}.raw
-            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.x86_64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi0.config.image.baseName}.raw
-          '';
-        });
+        pi3 = mkImage self.nixosConfigurations.pi3;
+        pi3-native = mkImage self.nixosConfigurations.pi3-native;
+        pi3b = mkImage self.nixosConfigurations.pi3b;
+        pi3b-native = mkImage self.nixosConfigurations.pi3b-native;
+        pi3bplus = mkImage self.nixosConfigurations.pi3bplus;
+        pi3bplus-native = mkImage self.nixosConfigurations.pi3bplus-native;
+        pi4 = mkImage self.nixosConfigurations.pi4;
+        pi4-native = mkImage self.nixosConfigurations.pi4-native;
+        pi0 = mkImage self.nixosConfigurations.pi0;
       };
 
       packages = forAllSystems (system: {

@@ -16,6 +16,8 @@ It currently targets Raspberry Pi boards that boot via the Raspberry Pi firmware
 - **Reusable flake library API**:
   - `lib.mkRpiSystem`
   - `lib.mkFlashApp`
+  - `lib.mkImage`
+  - `lib.mkHybridImage`
   - `lib.boards`
 - **Host-side flash apps** with safety checks:
   - removable-device check
@@ -167,6 +169,26 @@ apps.x86_64-linux.flash-my-pi3b = rpi.lib.mkFlashApp {
 };
 ```
 
+### `lib.mkImage`
+Create the final image derivation for a `nixosConfiguration`, automatically applying the hybrid MBR post-processing required by boards that need it.
+
+Example:
+
+```nix
+let
+  myPi3b = rpi.lib.mkRpiSystem {
+    buildSystem = "x86_64-linux";
+    board = "pi3b";
+    modules = [ ./configuration.nix ];
+  };
+in {
+  packages.x86_64-linux.my-pi3b-image = rpi.lib.mkImage myPi3b;
+}
+```
+
+### `lib.mkHybridImage`
+Force hybrid-MBR post-processing for a `nixosConfiguration` image. Mostly useful if you're doing something custom and want the raw helper directly.
+
 ### `lib.boards`
 Board metadata used by `mkRpiSystem`, including:
 - target system
@@ -225,7 +247,7 @@ Current status:
 - Pi 3B+ image support: implemented
 - Pi 4 image support: implemented
 - Pi 0 support: experimental
-- library API (`lib.mkRpiSystem`, `lib.mkFlashApp`, `nixosModules`): implemented
+- library API (`lib.mkRpiSystem`, `lib.mkFlashApp`, `lib.mkImage`, `nixosModules`): implemented
 
 Known caveats:
 
