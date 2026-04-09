@@ -9,6 +9,7 @@ let
     [all]
     arm_64bit=1
     enable_uart=1
+    core_freq=250
     avoid_warnings=1
     disable_fw_kms_setup=1
   '';
@@ -27,6 +28,12 @@ in
     systemd-boot.enable = lib.mkForce true;
     efi.canTouchEfiVariables = false;
   };
+
+  boot.kernelParams = [
+    "console=ttyAMA0,115200"
+    "console=tty1"
+    "earlycon=pl011,0x3f201000"
+  ];
 
   hardware.deviceTree.enable = true;
 
