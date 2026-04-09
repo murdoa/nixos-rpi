@@ -29,7 +29,6 @@ in
   };
 
   hardware.deviceTree.enable = true;
-  hardware.deviceTree.name = "broadcom/bcm2837-rpi-3-b-plus.dtb";
 
   image.repart = {
     name = "image";

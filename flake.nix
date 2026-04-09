@@ -32,6 +32,30 @@
           modules = [ ./hosts/pi3.nix ];
         };
 
+        pi3b = mkRpiSystem {
+          buildSystem = "x86_64-linux";
+          targetSystem = "aarch64-linux";
+          modules = [ ./hosts/pi3b.nix ];
+        };
+
+        pi3b-native = mkRpiSystem {
+          buildSystem = "aarch64-linux";
+          targetSystem = "aarch64-linux";
+          modules = [ ./hosts/pi3b.nix ];
+        };
+
+        pi3bplus = mkRpiSystem {
+          buildSystem = "x86_64-linux";
+          targetSystem = "aarch64-linux";
+          modules = [ ./hosts/pi3bplus.nix ];
+        };
+
+        pi3bplus-native = mkRpiSystem {
+          buildSystem = "aarch64-linux";
+          targetSystem = "aarch64-linux";
+          modules = [ ./hosts/pi3bplus.nix ];
+        };
+
         pi4 = mkRpiSystem {
           buildSystem = "x86_64-linux";
           targetSystem = "aarch64-linux";
@@ -66,6 +90,34 @@
           '';
         });
 
+        pi3b = self.nixosConfigurations.pi3b.config.system.build.image.overrideAttrs (old: {
+          preInstall = (old.preInstall or "") + ''
+            ${nixpkgs.legacyPackages.x86_64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3b.config.image.baseName}.raw
+            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.x86_64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3b.config.image.baseName}.raw
+          '';
+        });
+
+        pi3b-native = self.nixosConfigurations.pi3b-native.config.system.build.image.overrideAttrs (old: {
+          preInstall = (old.preInstall or "") + ''
+            ${nixpkgs.legacyPackages.aarch64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3b-native.config.image.baseName}.raw
+            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.aarch64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3b-native.config.image.baseName}.raw
+          '';
+        });
+
+        pi3bplus = self.nixosConfigurations.pi3bplus.config.system.build.image.overrideAttrs (old: {
+          preInstall = (old.preInstall or "") + ''
+            ${nixpkgs.legacyPackages.x86_64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3bplus.config.image.baseName}.raw
+            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.x86_64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3bplus.config.image.baseName}.raw
+          '';
+        });
+
+        pi3bplus-native = self.nixosConfigurations.pi3bplus-native.config.system.build.image.overrideAttrs (old: {
+          preInstall = (old.preInstall or "") + ''
+            ${nixpkgs.legacyPackages.aarch64-linux.gptfdisk}/bin/sgdisk --hybrid 1:EE ${self.nixosConfigurations.pi3bplus-native.config.image.baseName}.raw
+            echo -e "M\nt\n1\n0b\nw\nr\nw\n" | ${nixpkgs.legacyPackages.aarch64-linux.util-linux}/bin/fdisk ${self.nixosConfigurations.pi3bplus-native.config.image.baseName}.raw
+          '';
+        });
+
         pi4 = self.nixosConfigurations.pi4.config.system.build.image;
         pi4-native = self.nixosConfigurations.pi4-native.config.system.build.image;
 
@@ -80,9 +132,13 @@
       packages = forAllSystems (system: {
         default = self.packages.${system}.pi3-image;
         pi3-image = self.images.pi3;
+        pi3b-image = self.images.pi3b;
+        pi3bplus-image = self.images.pi3bplus;
         pi4-image = self.images.pi4;
         pi0-image = self.images.pi0;
         pi3-image-native = self.images.pi3-native;
+        pi3b-image-native = self.images.pi3b-native;
+        pi3bplus-image-native = self.images.pi3bplus-native;
         pi4-image-native = self.images.pi4-native;
       });
 
@@ -90,6 +146,14 @@
         flash-pi3 = mkFlashApp {
           name = "flash-pi3";
           image = self.images.pi3;
+        };
+        flash-pi3b = mkFlashApp {
+          name = "flash-pi3b";
+          image = self.images.pi3b;
+        };
+        flash-pi3bplus = mkFlashApp {
+          name = "flash-pi3bplus";
+          image = self.images.pi3bplus;
         };
         flash-pi4 = mkFlashApp {
           name = "flash-pi4";
@@ -102,6 +166,14 @@
         flash-pi3-native = mkFlashApp {
           name = "flash-pi3-native";
           image = self.images.pi3-native;
+        };
+        flash-pi3b-native = mkFlashApp {
+          name = "flash-pi3b-native";
+          image = self.images.pi3b-native;
+        };
+        flash-pi3bplus-native = mkFlashApp {
+          name = "flash-pi3bplus-native";
+          image = self.images.pi3bplus-native;
         };
         flash-pi4-native = mkFlashApp {
           name = "flash-pi4-native";

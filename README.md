@@ -4,7 +4,8 @@ A minimal template for building NixOS images for Raspberry Pi boards, with first
 
 ## Supported boards
 
-- Raspberry Pi 3 / 3B+
+- Raspberry Pi 3B
+- Raspberry Pi 3B+
 - Raspberry Pi 4
 - Raspberry Pi Zero W (experimental)
 
@@ -20,11 +21,19 @@ On NixOS hosts, enable binfmt for aarch64 builds:
 
 ## Build images
 
-### Pi 3
+### Pi 3B
 
 ```bash
-nix build .#packages.x86_64-linux.pi3-image
+nix build .#packages.x86_64-linux.pi3b-image
 ```
+
+### Pi 3B+
+
+```bash
+nix build .#packages.x86_64-linux.pi3bplus-image
+```
+
+`pi3-image` remains as an alias to the Pi 3B+ image.
 
 ### Pi 4
 
@@ -41,16 +50,20 @@ nix build .#packages.x86_64-linux.pi0-image
 ## Flashing
 
 ```bash
-nix run .#flash-pi3 -- /dev/sdX
+nix run .#flash-pi3b -- /dev/sdX
+nix run .#flash-pi3bplus -- /dev/sdX
 nix run .#flash-pi4 -- /dev/sdX
 ```
 
 Native-image flash apps are also available from an `x86_64-linux` host:
 
 ```bash
-nix run .#flash-pi3-native -- /dev/sdX
+nix run .#flash-pi3b-native -- /dev/sdX
+nix run .#flash-pi3bplus-native -- /dev/sdX
 nix run .#flash-pi4-native -- /dev/sdX
 ```
+
+`flash-pi3` and `flash-pi3-native` remain as aliases to the Pi 3B+ variants.
 
 ## Layout
 
