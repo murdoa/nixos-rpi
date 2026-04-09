@@ -2,17 +2,17 @@
 
 NixOS image builders and reusable flake modules for Raspberry Pi boards.
 
-This repo can be used in two ways:
+You can use this repository in two ways:
 
-- **as a standalone flake** — build and flash Pi images directly from this repo
+- **as a standalone flake** — build and flash Raspberry Pi images directly from this repo
 - **as a library flake** — import `lib.mkRpiSystem`, `lib.mkFlashApp`, and `nixosModules.*` from another flake
 
-It currently targets Raspberry Pi boards that boot through the Raspberry Pi firmware + U-Boot + EFI/UKI path, with first-class support for **Pi 3B**, **Pi 3B+**, and **Pi 4**.
+It currently targets Raspberry Pi boards that boot via the Raspberry Pi firmware + U-Boot + EFI/UKI path, with first-class support for **Pi 3B**, **Pi 3B+**, and **Pi 4**.
 
 ## What's in the box
 
 - **Cross- and native-buildable NixOS images** for Raspberry Pi boards
-- **Board-specific boot/image modules** for Pi 3B, Pi 3B+, Pi 4, and experimental Pi Zero W
+- **Board-specific boot and image modules** for Pi 3B, Pi 3B+, Pi 4, and experimental Pi Zero W
 - **Reusable flake library API**:
   - `lib.mkRpiSystem`
   - `lib.mkFlashApp`
@@ -20,9 +20,9 @@ It currently targets Raspberry Pi boards that boot through the Raspberry Pi firm
 - **Host-side flash apps** with safety checks:
   - removable-device check
   - interactive confirmation
-  - `/dev/disk/by-id/...` compatible
+  - `/dev/disk/by-id/...` support
 - **Pi 3 serial-console stabilization** for boot debugging:
-  - explicit serial kernel params
+  - explicit serial kernel parameters
   - `core_freq=250`
   - `enable_uart=1`
 
@@ -41,7 +41,7 @@ nix build .#packages.x86_64-linux.pi3bplus-image
 nix build .#packages.x86_64-linux.pi4-image
 ```
 
-Native-image outputs are also available:
+Native image outputs are also available:
 
 ```bash
 nix build .#packages.x86_64-linux.pi3b-image-native
@@ -89,7 +89,7 @@ Legacy aliases remain:
 | `x86_64-linux` | yes |
 | `aarch64-linux` | yes |
 
-On NixOS hosts, enable binfmt for aarch64 builds if needed:
+On NixOS hosts, enable binfmt for `aarch64-linux` builds if needed:
 
 ```nix
 {
@@ -191,7 +191,7 @@ This makes it possible to build the same logical system for multiple Pi boards b
 
 ### Pi 3 / Pi 4
 
-Boot chain is:
+Boot chain:
 
 ```text
 Raspberry Pi firmware -> U-Boot -> EFI/systemd-boot -> UKI -> NixOS
@@ -199,23 +199,23 @@ Raspberry Pi firmware -> U-Boot -> EFI/systemd-boot -> UKI -> NixOS
 
 ### Pi 3 serial notes
 
-Pi 3 boards are annoying little bastards when it comes to serial console routing. This repo includes Pi 3-specific serial stabilization:
+Pi 3 boards need a little extra help for reliable serial console output. This repository includes Pi 3-specific serial stabilization:
 
 - `console=ttyAMA0,115200`
 - `earlycon=pl011,0x3f201000`
 - `enable_uart=1`
 - `core_freq=250`
 
-This is specifically to avoid the classic Pi 3 mini-UART / clock-drift garbage during boot.
+These settings help avoid mini-UART clock drift during boot.
 
 ## Default login
 
-Default image credentials are:
+Default image credentials:
 
 - **user:** `nixos`
 - **password:** `nixos`
 
-Change that before exposing the board to anything except your own LAN and bad decisions.
+Change these before exposing the board to any network you do not control.
 
 ## Status
 
@@ -229,10 +229,10 @@ Current status:
 
 Known caveats:
 
-- Pi Zero support is still experimental and more cursed than the rest
-- Pi 3 and Pi 3B+ are now split explicitly because they are similar enough to be annoying and different enough to waste your evening
-- flash apps are host-side convenience wrappers, not magical deploy tools
+- Pi Zero support is still experimental
+- Pi 3 and Pi 3B+ are handled as separate targets
+- flash apps are host-side convenience wrappers, not full deployment tools
 
 ## Why this exists
 
-Because building Raspberry Pi NixOS images should not require copy-pasting half a broken repo, re-deriving board quirks from first principles, and sacrificing an SD card to the firmware gods every time.
+Building Raspberry Pi NixOS images should not require pulling pieces from multiple repos or rediscovering board-specific boot details from scratch.
