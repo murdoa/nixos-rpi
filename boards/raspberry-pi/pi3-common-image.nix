@@ -66,6 +66,9 @@ in
   system.activationScripts.raspberryPiUpdateUboot = lib.stringAfter [ "etc" ] ''
     if mountpoint -q ${lib.escapeShellArg config.boot.loader.efi.efiSysMountPoint}; then
       cp --no-preserve=mode,ownership ${lib.escapeShellArg uBootSource} ${lib.escapeShellArg (config.boot.loader.efi.efiSysMountPoint + "/u-boot.bin")}
+      ${lib.optionalString silentSerialBootEnabled ''
+        cp --no-preserve=mode,ownership ${lib.escapeShellArg uBootEnv} ${lib.escapeShellArg (config.boot.loader.efi.efiSysMountPoint + "/uboot.env")}
+      ''}
       sync
     fi
   '';
