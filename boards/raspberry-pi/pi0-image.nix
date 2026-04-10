@@ -115,6 +115,8 @@ let
       --no-perms \
       --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
       "$tmp/" "$boot_mount/"
+
+    sync
   '';
 in
 {
