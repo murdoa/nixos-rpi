@@ -79,17 +79,14 @@ in
   '';
 
   hardware.raspberry-pi.boot = {
-    serialConsole = "ttyAMA0";
+    serialConsole = "ttyS0";
     kernelConsoleParams = [
-      "console=ttyAMA0,115200"
-      "console=tty1"
-      "earlycon=pl011,0x3f201000"
+      "console=ttyS0,115200n8"
+      "console=tty0"
     ];
   };
 
-  boot.kernelParams = [
-    "8250.nr_uarts=0"
-  ];
+  boot.kernelParams = [ ];
 
   hardware.deviceTree.enable = true;
 
