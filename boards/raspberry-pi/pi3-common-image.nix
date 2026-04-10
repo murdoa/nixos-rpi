@@ -22,8 +22,6 @@ let
   uBootSource = "${uBootPackage}/u-boot.bin";
   uBootEnvText = pkgs.writeText "uboot.env.txt" ''
     silent=1
-    stdout=nulldev
-    stderr=nulldev
   '';
   uBootEnv = pkgs.runCommand "uboot.env" { nativeBuildInputs = [ pkgs.ubootTools ]; } ''
     mkenvimage -s 0x4000 -o "$out" ${lib.escapeShellArg uBootEnvText}
