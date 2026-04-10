@@ -20,10 +20,13 @@ let
     else
       pkgs.ubootRaspberryPi3_64bit;
   uBootSource = "${uBootPackage}/u-boot.bin";
-  uBootEnv = pkgs.writeText "uboot.env" ''
+  uBootEnvText = pkgs.writeText "uboot.env.txt" ''
     silent=1
     stdout=nulldev
     stderr=nulldev
+  '';
+  uBootEnv = pkgs.runCommand "uboot.env" { nativeBuildInputs = [ pkgs.ubootTools ]; } ''
+    mkenvimage -s 0x4000 -o "$out" ${lib.escapeShellArg uBootEnvText}
   '';
   configTxt = pkgs.writeText "config.txt" ''
     [pi3]
