@@ -71,6 +71,8 @@ in
       cp --no-preserve=mode,ownership ${lib.escapeShellArg uBootSource} ${lib.escapeShellArg (config.boot.loader.efi.efiSysMountPoint + "/u-boot.bin")}
       ${lib.optionalString silentSerialBootEnabled ''
         cp --no-preserve=mode,ownership ${lib.escapeShellArg uBootEnv} ${lib.escapeShellArg (config.boot.loader.efi.efiSysMountPoint + "/uboot.env")}
+      ''}${lib.optionalString (!silentSerialBootEnabled) ''
+        rm -f ${lib.escapeShellArg (config.boot.loader.efi.efiSysMountPoint + "/uboot.env")}
       ''}
       sync
     fi
