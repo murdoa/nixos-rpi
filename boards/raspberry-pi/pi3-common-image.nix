@@ -9,6 +9,8 @@ let
     if silentSerialBootEnabled then
       pkgs.ubootRaspberryPi3_64bit.override {
         extraConfig = ''
+          CONFIG_ENV_IS_IN_FAT=y
+          CONFIG_ENV_FAT_FILE="uboot.env"
           CONFIG_SILENT_CONSOLE=y
           CONFIG_SYS_DEVICE_NULLDEV=y
           CONFIG_SILENT_CONSOLE_UPDATE_ON_SET=y
