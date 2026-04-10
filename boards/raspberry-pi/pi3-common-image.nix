@@ -1,10 +1,28 @@
 { lib, config, pkgs, modulesPath, ... }:
 let
+  silentSerialBootEnabled = config.hardware.raspberry-pi.silentSerialBoot.enable;
   efiArch = pkgs.stdenv.hostPlatform.efiArch;
   ukiFile = config.system.boot.loader.ukiFile;
   efiSource = "${pkgs.systemd}/lib/systemd/boot/efi/systemd-boot${efiArch}.efi";
   firmwareSource = "${pkgs.raspberrypifw}/share/raspberrypi/boot";
-  uBootSource = "${pkgs.ubootRaspberryPi3_64bit}/u-boot.bin";
+  uBootPackage =
+    if silentSerialBootEnabled then
+      pkgs.ubootRaspberryPi3_64bit.override {
+        extraConfig = ''
+          CONFIG_SILENT_CONSOLE=y
+          CONFIG_SYS_DEVICE_NULLDEV=y
+          CONFIG_SILENT_CONSOLE_UPDATE_ON_SET=y
+          CONFIG_SILENT_U_BOOT_ONLY=y
+        '';
+      }
+    else
+      pkgs.ubootRaspberryPi3_64bit;
+  uBootSource = "${uBootPackage}/u-boot.bin";
+  uBootEnv = pkgs.writeText "uboot.env" ''
+    silent=1
+    stdout=nulldev
+    stderr=nulldev
+  '';
   configTxt = pkgs.writeText "config.txt" ''
     [pi3]
     kernel=u-boot.bin
@@ -26,6 +44,8 @@ let
     "/u-boot.bin".source = uBootSource;
     "/config.txt".source = configTxt;
     "/cmdline.txt".source = config.hardware.raspberry-pi.boot.cmdlineFile;
+  } // lib.optionalAttrs silentSerialBootEnabled {
+    "/uboot.env".source = uBootEnv;
   };
 in
 {
