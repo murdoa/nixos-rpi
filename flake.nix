@@ -99,7 +99,7 @@
         # Cross-compiled images (default)
         pi3-image = images.pi3.out;
         # Native build images (aarch64 only)
-        pi3-image-native = images.pi3-image-native.out;
+        pi3-image-native = images.pi3-native.out;
         # Flutter app package
         flutter = flutterApp.packages.${system}.default;
       });
