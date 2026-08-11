@@ -18,8 +18,6 @@ let
     set -euo pipefail
 
     export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-    export EGL_LOG_LEVEL=debug
-    export WAYLAND_DEBUG=1
     unset DISPLAY
 
     exec ${pkgs.weston}/bin/weston \
