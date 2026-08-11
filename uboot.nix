@@ -46,6 +46,7 @@ in
       # the stock two-second autoboot pause. ZERO_BOOTDELAY_CHECK retains the
       # ability to interrupt boot from a console by pressing a key immediately.
       ubootRaspberryPi3_64bit = prev.ubootRaspberryPi3_64bit.override {
+        extraPatches = [ ./patches/u-boot-rpi-compressed-kernel-buffer.patch ];
         extraConfig = ''
           CONFIG_BOOTDELAY=0
           CONFIG_ZERO_BOOTDELAY_CHECK=y

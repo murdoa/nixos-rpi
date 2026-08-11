@@ -1,0 +1,13 @@
+diff --git a/board/raspberrypi/rpi/rpi.env b/board/raspberrypi/rpi/rpi.env
+index e8d9a5d..17c977f 100644
+--- a/board/raspberrypi/rpi/rpi.env
++++ b/board/raspberrypi/rpi/rpi.env
+@@ -71,4 +71,8 @@ pxefile_addr_r=0x02500000
+ scriptaddr=0x02400000
+ kernel_comp_addr_r=0x02000000
+-kernel_comp_size=0x03400000
++# Keep the declared compressed input below kernel_comp_addr_r. booti passes
++# this complete range to the decompressor; the upstream 52 MiB value overlaps
++# the input loaded at kernel_addr_r with the output buffer at 32 MiB.
++# 24 MiB fits both current and rollback kernels compressed with gzip -1.
++kernel_comp_size=0x01800000
