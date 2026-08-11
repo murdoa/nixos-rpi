@@ -9,13 +9,17 @@
   imports = [
     ./out-of-tree/default.nix
     ./graphics.nix
+    ./kernel.nix
     ./splash.nix
   ];
 
   nix.optimise.automatic = true;
   nix.settings.auto-optimise-store = true;
 
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackagesFor (pkgs.linux_latest.override {
+    # Platform pruning makes generic arm64 defaults inapplicable.
+    ignoreConfigErrors = true;
+  });
 
   # sdImage.compressImage = false;
 
