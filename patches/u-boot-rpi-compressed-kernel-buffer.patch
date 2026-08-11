@@ -2,7 +2,9 @@ diff --git a/board/raspberrypi/rpi/rpi.env b/board/raspberrypi/rpi/rpi.env
 index e8d9a5d..17c977f 100644
 --- a/board/raspberrypi/rpi/rpi.env
 +++ b/board/raspberrypi/rpi/rpi.env
-@@ -72,3 +72,3 @@ scriptaddr=0x02400000
- kernel_comp_addr_r=0x02000000
+@@ -71,4 +71,4 @@ pxefile_addr_r=0x02500000
+ scriptaddr=0x02400000
+-kernel_comp_addr_r=0x02000000
 -kernel_comp_size=0x03400000
-+kernel_comp_size=0x01800000
++kernel_comp_addr_r=0x10000000
++kernel_comp_size=0x04000000

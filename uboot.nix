@@ -24,7 +24,6 @@ let
           gnugrep
           gnused
           gzip
-          ubootTools
         ]);
         inherit (builderPkgs) bash;
       };
