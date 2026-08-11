@@ -36,6 +36,26 @@ the 19 MB image reduction. Platform pruning therefore substantially improves
 build/output size but only saved about 0.4 s in the pre-userspace path on this
 SD card and firmware combination.
 
+## Early splash result
+
+The initial initrd listed the panel driver but omitted its `i2c_gpio` provider.
+The ST7701 reset GPIO is supplied by a PCA9539 on that bus, so panel probing
+deferred until stage two. HDMI and composite nodes also kept VC4's component
+master waiting for stage-two dependencies even though only DPI is used.
+
+After ordering the complete panel dependency chain in the initrd and disabling
+the unused HDMI and VEC device-tree nodes:
+
+- PCA9539 available: 16.448 s
+- ST7701 initialized: 16.459 s
+- VC4 initialized: 16.473 s
+- DPI framebuffer available: 16.478 s
+
+Previously the DPI framebuffer appeared at 21.254 s. The LCD graphics path is
+now ready **4.776 seconds earlier**, only 48 ms after `/init` starts. Remaining
+time before this point is firmware/kernel loading and cannot be addressed by
+further initrd driver ordering.
+
 ## Changes and staged experiments
 
 Keep each stage independently bootable and benchmark it before proceeding.
