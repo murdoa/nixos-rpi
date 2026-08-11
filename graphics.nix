@@ -45,6 +45,7 @@ in
 
   services.udev.extraRules = ''
     ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="Hynitron CST3240 Touchscreen", ENV{LIBINPUT_CALIBRATION_MATRIX}="-0.041853 -0.925575 0.917412 1.004484 0.003865 0.009742"
+    ACTION=="add|change", SUBSYSTEM=="drm", KERNEL=="card1", TAG+="systemd"
   '';
 
   environment.systemPackages = with pkgs; [
@@ -72,7 +73,9 @@ in
     description = "Weston kiosk session";
     wantedBy = [ "multi-user.target" ];
     wants = [ "plymouth-quit.service" ];
+    requires = [ "dev-dri-card1.device" ];
     after = [
+      "dev-dri-card1.device"
       "seatd.service"
       "plymouth-quit.service"
     ];
