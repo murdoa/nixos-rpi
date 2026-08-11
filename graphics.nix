@@ -5,12 +5,9 @@
   ...
 }:
 let
-  # kioskCmd = "${pkgs.flutter_reference_app}/bin/flutter_reference_app";
-  kioskCmd = "${pkgs.kitty}/bin/kitty";
+  kioskCmd = "${pkgs.weston}/bin/weston-flower";
   kioskAppScript = pkgs.writeShellScript "kiosk-app" ''
     set -euo pipefail
- 
-    eglinfo -B
 
     exec ${kioskCmd}
   '';
@@ -24,10 +21,11 @@ let
 
     exec ${pkgs.weston}/bin/weston \
       --backend=drm-backend.so \
+      --renderer=gl \
       --shell=kiosk-shell.so \
       --idle-time=0 \
       -- \
-      ${kioskAppScript}/bin/kiosk-app
+      ${kioskAppScript}
   '';
 in
 {
