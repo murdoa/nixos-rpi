@@ -56,6 +56,19 @@ now ready **4.776 seconds earlier**, only 48 ms after `/init` starts. Remaining
 time before this point is firmware/kernel loading and cannot be addressed by
 further initrd driver ordering.
 
+## U-Boot autoboot experiment
+
+The stock Raspberry Pi 3 U-Boot embedded environment used `bootdelay=2` and
+`boot_targets=mmc usb pxe dhcp`. A board override now sets `bootdelay=0` while
+keeping `ZERO_BOOTDELAY_CHECK`, standard distro boot, extlinux parsing, and all
+boot targets. NixOS generation updates therefore remain unchanged.
+
+The replacement U-Boot booted successfully, but the first Linux timestamp only
+moved from 16.322 to 16.214 seconds, within normal boot variance. The apparent
+two-second default delay is not materially present on this bootstd/extlinux
+path. The dominant pre-kernel cost is loading the 44.5 MB uncompressed kernel
+and 22 MB initrd from ext4, not U-Boot's autoboot countdown.
+
 ## Changes and staged experiments
 
 Keep each stage independently bootable and benchmark it before proceeding.
