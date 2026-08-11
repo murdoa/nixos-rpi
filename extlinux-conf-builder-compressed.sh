@@ -151,9 +151,9 @@ cat > $tmpFile <<EOF
 # Generated file, all changes will be lost on nixos-rebuild!
 
 # Change this to e.g. nixos-42 to temporarily boot to an older configuration.
-# Keep the raw entry as the automatic recovery path. Compressed kernels are
-# opt-in until their U-Boot path has been validated on this board.
-DEFAULT nixos-default-raw
+# Boot compressed by default while retaining nixos-default-raw as an explicit
+# recovery entry for the current generation.
+DEFAULT nixos-default
 
 TIMEOUT $timeout
 EOF
