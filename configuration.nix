@@ -11,6 +11,7 @@
     ./graphics.nix
     ./kernel.nix
     ./splash.nix
+    ./uboot.nix
   ];
 
   nix.optimise.automatic = true;
