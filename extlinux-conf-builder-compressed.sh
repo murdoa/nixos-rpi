@@ -70,17 +70,23 @@ copyToKernelsDir() {
     result=$dst
 }
 
-# Compress a kernel while copying it. U-Boot's native `booti` command
-# decompresses gzip Images using kernel_comp_addr_r/kernel_comp_size. The
-# destination name remains content-addressed by the immutable source path.
+# Compress a kernel while copying it and wrap it in U-Boot's legacy image
+# header. The extlinux implementation recognises this header and uses bootm,
+# whose compressed-kernel path is mature across U-Boot platforms. Plain
+# Image.gz through booti currently fails on the Raspberry Pi build.
 copyCompressedKernelToKernelsDir() {
     local src=$(readlink -f "$1")
-    local dst="$target/nixos/$(cleanName $src).gz"
+    local dst="$target/nixos/$(cleanName $src).uImage"
     if ! test -e $dst; then
         local dstTmp=$dst.tmp.$$
+        local compressed=$dstTmp.gz
         # Level 1 keeps nixos-rebuild boot tolerable on the Pi while reducing
         # the amount U-Boot must read from the SD card substantially.
-        gzip -1 -c $src > $dstTmp
+        gzip -1 -c $src > $compressed
+        mkimage -A arm64 -O linux -T kernel -C gzip \
+          -a 0x00080000 -e 0x00080000 -n NixOS \
+          -d $compressed $dstTmp
+        rm -f $compressed
         mv $dstTmp $dst
     fi
     filesCopied[$dst]=1
