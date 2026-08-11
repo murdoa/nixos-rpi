@@ -95,6 +95,10 @@
   networking = {
     hostName = "nixos";
 
+    # All networking is configured statically below.  Waiting 30 seconds for
+    # dhcpcd to time out adds nothing but existential dread.
+    useDHCP = false;
+
     nameservers = [
       "1.1.1.1"
       "9.9.9.9"
@@ -112,6 +116,13 @@
       interface = "enu1u1";
     };
   };
+
+  # This is an appliance.  Persistent logs both wear the SD card and make boot
+  # replay the previous journal before basic.target can be reached.
+  services.journald.extraConfig = ''
+    Storage=volatile
+    RuntimeMaxUse=16M
+  '';
 
   users = {
     users.nixos = {

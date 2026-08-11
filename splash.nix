@@ -69,12 +69,6 @@
       "udev.log_priority=3"
       "rd.systemd.show_status=auto"
       "vt.global_cursor_default=0"
-
-      # debugging slow boots
-      "drm.debug=0x1ff"
-      "loglevel=7"
-      "ignore_loglevel"
-      "log_buf_len=32M"
     ];
     # Hide the OS choice for bootloaders.
     # It's still possible to open the bootloader list by pressing any key
