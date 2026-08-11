@@ -639,7 +639,7 @@ static int st7701_prepare(struct drm_panel *panel)
 	struct st7701 *st7701 = panel_to_st7701(panel);
 	int ret;
 
-	gpiod_set_value(st7701->reset, 0);
+	gpiod_set_value_cansleep(st7701->reset, 0);
 
 	ret = regulator_bulk_enable(ARRAY_SIZE(st7701->supplies),
 				    st7701->supplies);
@@ -647,7 +647,7 @@ static int st7701_prepare(struct drm_panel *panel)
 		return ret;
 	msleep(20);
 
-	gpiod_set_value(st7701->reset, 1);
+	gpiod_set_value_cansleep(st7701->reset, 1);
 	msleep(150);
 
 	st7701_init_sequence(st7701);
@@ -687,7 +687,7 @@ static int st7701_unprepare(struct drm_panel *panel)
 
 	msleep(st7701->sleep_delay);
 
-	gpiod_set_value(st7701->reset, 0);
+	gpiod_set_value_cansleep(st7701->reset, 0);
 
 	/**
 	 * During the Resetting period, the display will be blanked
