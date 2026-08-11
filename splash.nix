@@ -35,24 +35,26 @@
     #   ];
     # };
 
+    # Load the panel's providers before its consumers.  In particular, the
+    # panel reset is supplied by a PCA9539 on an i2c-gpio bus.  Without
+    # i2c_gpio in the initrd the panel probe defers until stage two, leaving the
+    # LCD dark for roughly five seconds while Plymouth is already running.
     initrd.kernelModules = [
-      "panel_sitronix_st7701"
-      "drm_mipi_dbi"
+      "i2c_gpio"
+      "spi_gpio"
+      "spi_bitbang"
+      "reset_gpio"
+      "pwm_gpio"
+      "pwm_bl"
 
-      "vc4"
-      "cec"
       "drm_mipi_dbi"
+      "panel_sitronix_st7701"
+
+      "drm_exec"
       "drm_dma_helper"
       "drm_display_helper"
-      "drm_exec"
-
-      "spi_gpio"
-      "spi-bitbang"
-
-      "pwm_bl"
-      "pwm_gpio"
-
-      "reset_gpio"
+      "cec"
+      "vc4"
     ];
 
 
