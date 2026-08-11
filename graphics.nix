@@ -9,10 +9,8 @@ let
   kioskAppScript = pkgs.writeShellScript "kiosk-app" ''
     set -euo pipefail
 
-    # Flutter's GTK embedder requires desktop GL, which VC4 cannot provide.
-    # Keep Weston hardware accelerated and render only Flutter with llvmpipe.
-    export LIBGL_ALWAYS_SOFTWARE=true
-    export GALLIUM_DRIVER=llvmpipe
+    # Force GTK to request an OpenGL ES context supported by VC4.
+    export GDK_GL=gles
 
     exec ${kioskCmd}
   '';
