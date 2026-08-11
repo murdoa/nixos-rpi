@@ -64,6 +64,18 @@
                 nixpkgs.overlays = [
                   (final: prev: {
                     flutter_reference_app = flutterApp.packages.${targetSystem}.default.overrideAttrs (oldAttrs: {
+                      postPatch = (oldAttrs.postPatch or "") + ''
+                        mkdir -p assets
+                        cp ${final.dejavu_fonts.minimal}/share/fonts/truetype/DejaVuSans.ttf assets/
+                        cat >> pubspec.yaml <<'EOF'
+                          fonts:
+                            - family: DejaVuSans
+                              fonts:
+                                - asset: assets/DejaVuSans.ttf
+                        EOF
+                        substituteInPlace lib/main.dart \
+                          --replace-fail 'theme: ThemeData(' 'theme: ThemeData(fontFamily: "DejaVuSans",'
+                      '';
                       extraWrapProgramArgs = ''
                         --prefix LD_LIBRARY_PATH : ${
                           final.lib.makeLibraryPath [

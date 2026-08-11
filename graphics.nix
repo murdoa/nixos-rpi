@@ -5,9 +5,14 @@
   ...
 }:
 let
-  kioskCmd = "${pkgs.weston}/bin/weston-flower";
+  kioskCmd = "${pkgs.flutter_reference_app}/bin/flutter_reference_app";
   kioskAppScript = pkgs.writeShellScript "kiosk-app" ''
     set -euo pipefail
+
+    # Flutter's GTK embedder requires desktop GL, which VC4 cannot provide.
+    # Keep Weston hardware accelerated and render only Flutter with llvmpipe.
+    export LIBGL_ALWAYS_SOFTWARE=true
+    export GALLIUM_DRIVER=llvmpipe
 
     exec ${kioskCmd}
   '';
