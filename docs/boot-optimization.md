@@ -69,6 +69,26 @@ two-second default delay is not materially present on this bootstd/extlinux
 path. The dominant pre-kernel cost is loading the 44.5 MB uncompressed kernel
 and 22 MB initrd from ext4, not U-Boot's autoboot countdown.
 
+## Compressed extlinux kernels
+
+The extlinux installer now creates a gzip-compressed kernel for every NixOS
+generation and retains an uncompressed `nixos-default-raw` recovery entry for
+the active generation. Generation discovery, initrds, DTBs, command lines and
+cleanup otherwise follow the upstream builder.
+
+The Raspberry Pi U-Boot defaults placed the decompression buffer at 32 MiB,
+which was unsafe for this layout. U-Boot is patched to use a 256 MiB scratch
+address with a 64 MiB compressed-input allowance. With that separation,
+`booti` successfully boots the 18,359,596-byte gzip kernel instead of reading
+the 44,526,080-byte raw Image.
+
+The final compressed-default deployment booted repeatedly with the expected
+NixOS generation, no failed units, working DPI/touch/network, and Weston. The
+first Linux timestamp remained approximately 16.0 seconds, however, so kernel
+compression produced no measurable boot-time improvement on this setup. Its
+main benefit is reducing boot storage and I/O; the complexity should be weighed
+against that modest practical value.
+
 ## Changes and staged experiments
 
 Keep each stage independently bootable and benchmark it before proceeding.
