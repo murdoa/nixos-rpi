@@ -102,7 +102,7 @@
     "ssh-keys": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-gr3FELSbADn2bHP5oj1wPftHXVM26NS43eUkt7xjlj0=",
+        "narHash": "sha256-Rqt9NAahl0EyJ97uxBoEDC/YiirTvw5LF9LfljMh4Zw=",
         "type": "file",
         "url": "https://github.com/murdoa.keys"
       },
