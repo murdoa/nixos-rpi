@@ -17,7 +17,7 @@ let
   startWeston = pkgs.writeShellScript "start-weston-kiosk" ''
     set -euo pipefail
 
-    export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
     export EGL_LOG_LEVEL=debug
     export WAYLAND_DEBUG=1
     unset DISPLAY
@@ -67,13 +67,29 @@ in
     ];
   };
 
-  services.getty.autologinUser = lib.mkForce "kiosk";
-  systemd.services."getty@tty1".enable = true;
-
-  systemd.user.services.weston-kiosk = {
+  # Start the compositor directly instead of waiting for getty autologin, PAM,
+  # and a per-user systemd manager. Ordering after plymouth-quit gives Weston
+  # the DRM master immediately after the splash releases it.
+  systemd.services.weston-kiosk = {
     description = "Weston kiosk session";
-    wantedBy = [ "default.target" ];
+    wantedBy = [ "multi-user.target" ];
+    wants = [ "plymouth-quit.service" ];
+    after = [
+      "seatd.service"
+      "plymouth-quit.service"
+    ];
     serviceConfig = {
+      User = "kiosk";
+      Group = "users";
+      SupplementaryGroups = [
+        "video"
+        "input"
+        "render"
+        "seat"
+      ];
+      RuntimeDirectory = "kiosk";
+      RuntimeDirectoryMode = "0700";
+      Environment = "XDG_RUNTIME_DIR=/run/kiosk";
       ExecStart = "${startWeston}";
       Restart = "always";
       RestartSec = 1;
