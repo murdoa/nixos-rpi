@@ -222,43 +222,28 @@
 		};
 	};
 	
-	// Disable composite video output
-	// fragment@12 {
-	// 	target = <&vec>;
-	// 	__overlay__ {
-	// 		status = "disabled";
-	// 	};
-	// };
+	/* Only DPI is used. Disabled outputs otherwise hold VC4 component binding
+	 * until their stage-two dependencies (notably HDMI audio) are available. */
+	fragment@12 {
+		target = <&vec>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
 
-	// // Increase CMA size to 256MB for framebuffer
-	// fragment@13 {
-	// 	target = <&cma>;
-	// 	__overlay__ {
-	// 		size = <0x10000000>;
-	// 	};
-	// };
+	fragment@13 {
+		target = <&i2c2>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
 
-    // // No audio
-	// fragment@14 {
-	// 	target = <&hdmi>;
-	// 	__dormant__  {
-	// 		dmas;
-	// 	};
-	// };
-
-	// Disable HDMI
-	// fragment@14 {
-	// 	target = <&i2c2>;
-	// 	__overlay__ {
-	// 		status = "disabled";
-	// 	};
-	// };
-	// fragment@15 {
-	// 	target = <&hdmi>;
-	// 	__overlay__  {
-	// 		status = "disabled";
-	// 	};
-	// };
+	fragment@14 {
+		target = <&hdmi>;
+		__overlay__  {
+			status = "disabled";
+		};
+	};
 
 	__overrides__ {
 	};
