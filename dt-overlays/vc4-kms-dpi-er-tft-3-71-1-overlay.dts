@@ -185,7 +185,7 @@
 				interrupts = <21 2>;
 				touchscreen-size-x = <240>;
 				touchscreen-size-y = <960>;
-				touchscreen-inverted-y;
+				touchscreen-inverted-x;
 				touchscreen-swapped-x-y;
 			};
 		};

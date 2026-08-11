@@ -47,6 +47,10 @@ in
     libinput
   ];
 
+  services.udev.extraRules = ''
+    ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="Hynitron CST3240 Touchscreen", ENV{LIBINPUT_CALIBRATION_MATRIX}="-0.041853 -0.925575 0.917412 1.004484 0.003865 0.009742"
+  '';
+
   environment.systemPackages = with pkgs; [
     weston
     libdrm
