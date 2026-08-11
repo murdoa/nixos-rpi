@@ -12,14 +12,9 @@
   boot = {
     plymouth = {
       enable = true;
-      theme = "abstract_ring_alt";
-      themePackages = with pkgs; [
-        # By default we would install all themes
-        # (adi1090x-plymouth-themes.override {
-        #   selected_themes = [ "abstract_ring_alt" ];
-        # })
-        (pkgs.callPackage ./pkgs/plymouth-theme/default.nix {})
-        
+      theme = "precision_clock_boot";
+      themePackages = [
+        (pkgs.callPackage ./pkgs/plymouth-theme-precision/default.nix { })
       ];
       extraConfig = ''
         ShowDelay=0
