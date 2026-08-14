@@ -63,6 +63,11 @@
               {
                 nixpkgs.overlays = [
                   (final: prev: {
+                    weston = prev.weston.overrideAttrs (oldAttrs: {
+                      patches = (oldAttrs.patches or [ ]) ++ [
+                        ./patches/weston-mirror-transformed-mode.patch
+                      ];
+                    });
                     timebase_hmi = timebaseHmi.packages.${targetSystem}.default.overrideAttrs (oldAttrs: {
                       postPatch = (oldAttrs.postPatch or "") + ''
                         mkdir -p assets

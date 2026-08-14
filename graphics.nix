@@ -14,6 +14,32 @@ let
 
     exec ${kioskCmd}
   '';
+  novncCertificate = pkgs.writeShellScript "novnc-certificate" ''
+    set -euo pipefail
+
+    if [[ ! -s /var/lib/novnc/tls.key || ! -s /var/lib/novnc/tls.crt ]]; then
+      ${pkgs.openssl}/bin/openssl req -x509 -newkey rsa:2048 -nodes \
+        -keyout /var/lib/novnc/tls.key \
+        -out /var/lib/novnc/tls.crt \
+        -days 3650 \
+        -subj /CN=192.168.0.157 \
+        -addext subjectAltName=IP:192.168.0.157
+    fi
+  '';
+  westonConfig = pkgs.writeText "weston.ini" ''
+    [core]
+    shell=kiosk-shell.so
+    idle-time=0
+    require-input=false
+
+    [output]
+    name=vnc
+    mirror-of=DPI-1
+    resizeable=false
+
+    [vnc]
+    refresh-rate=20
+  '';
   startWeston = pkgs.writeShellScript "start-weston-kiosk" ''
     set -euo pipefail
 
@@ -21,10 +47,12 @@ let
     unset DISPLAY
 
     exec ${pkgs.weston}/bin/weston \
-      --backend=drm-backend.so \
+      --backend=drm,vnc \
       --renderer=gl \
-      --shell=kiosk-shell.so \
-      --idle-time=0 \
+      --config=${westonConfig} \
+      --address=127.0.0.1 \
+      --port=5900 \
+      --disable-transport-layer-security \
       -- \
       ${kioskAppScript}
   '';
@@ -32,7 +60,7 @@ in
 {
   services.seatd.enable = true;
   # services.logind.enable = true;
-  # security.polkit.enable = true; 
+  # security.polkit.enable = true;
 
   hardware.graphics.enable = true;
   hardware.graphics.extraPackages = with pkgs; [
@@ -50,14 +78,21 @@ in
 
   environment.systemPackages = with pkgs; [
     weston
+    novnc
+    python3Packages.websockify
     libdrm
     mesa-demos # optional: glxgears etc (small)
     cage
   ];
 
+  # Weston authenticates VNC clients through this PAM service. Transport is
+  # plaintext only on loopback; websockify is the network-facing endpoint.
+  security.pam.services.weston-remote-access = { };
+
   users.users.kiosk = {
     isNormalUser = true;
     description = "Kiosk user";
+    password = "default";
     extraGroups = [
       "video"
       "input"
@@ -96,6 +131,33 @@ in
       RestartSec = 1;
     };
   };
+
+  systemd.services.novnc = {
+    description = "Browser VNC gateway";
+    wantedBy = [ "multi-user.target" ];
+    wants = [ "weston-kiosk.service" ];
+    after = [
+      "network.target"
+      "weston-kiosk.service"
+    ];
+    serviceConfig = {
+      DynamicUser = true;
+      StateDirectory = "novnc";
+      ExecStartPre = novncCertificate;
+      ExecStart = ''
+        ${pkgs.python3Packages.websockify}/bin/websockify \
+          --web=${pkgs.novnc}/share/webapps/novnc \
+          --cert=/var/lib/novnc/tls.crt \
+          --key=/var/lib/novnc/tls.key \
+          --ssl-only \
+          0.0.0.0:6080 127.0.0.1:5900
+      '';
+      Restart = "always";
+      RestartSec = 1;
+    };
+  };
+
+  networking.firewall.allowedTCPPorts = [ 6080 ];
 
   boot.kernelParams = [
     "consoleblank=0"

@@ -1,0 +1,31 @@
+--- a/frontend/main.c
++++ b/frontend/main.c
+@@ -2543,11 +2543,23 @@
+ 	assert(output->native_mode_copy.width);
+ 	assert(output->native_mode_copy.height);
+ 
+-	mode->width = output->native_mode_copy.width /
+-			mirror->current_scale;
+-
+-	mode->height = output->native_mode_copy.height /
+-			mirror->current_scale;
++	switch (output->transform) {
++	case WL_OUTPUT_TRANSFORM_90:
++	case WL_OUTPUT_TRANSFORM_270:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_90:
++	case WL_OUTPUT_TRANSFORM_FLIPPED_270:
++		mode->width = output->native_mode_copy.height /
++			      mirror->current_scale;
++		mode->height = output->native_mode_copy.width /
++			       mirror->current_scale;
++		break;
++	default:
++		mode->width = output->native_mode_copy.width /
++			      mirror->current_scale;
++		mode->height = output->native_mode_copy.height /
++			       mirror->current_scale;
++		break;
++	}
+ 
+ 	mode->refresh = output->native_mode_copy.refresh;
+ 	*scale = output->current_scale;
