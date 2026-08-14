@@ -34,6 +34,25 @@
     # panel reset is supplied by a PCA9539 on an i2c-gpio bus.  Without
     # i2c_gpio in the initrd the panel probe defers until stage two, leaving the
     # LCD dark for roughly five seconds while Plymouth is already running.
+    initrd.preLVMCommands = lib.mkBefore ''
+      backlight=/sys/class/backlight/backlight
+
+      if [ ! -e "$backlight/brightness" ]; then
+        echo "Backlight control missing; refusing to start Plymouth" >&2
+        fail
+      fi
+
+      if ! echo 6 > "$backlight/brightness"; then
+        echo "Failed to set backlight brightness; refusing to start Plymouth" >&2
+        fail
+      fi
+
+      if [ "$(cat "$backlight/brightness")" != 6 ]; then
+        echo "Backlight brightness verification failed; refusing to start Plymouth" >&2
+        fail
+      fi
+    '';
+
     initrd.kernelModules = [
       "i2c_gpio"
       "spi_gpio"
