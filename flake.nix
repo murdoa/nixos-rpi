@@ -68,18 +68,6 @@
                         ./patches/weston-mirror-transformed-mode.patch
                       ];
                     });
-                    novnc = prev.novnc.overrideAttrs (oldAttrs: {
-                      postPatch = (oldAttrs.postPatch or "") + ''
-                        substituteInPlace app/ui.js \
-                          --replace-fail "UI.initSetting('show_dot', false);" \
-                                         "UI.initSetting('show_dot', true);"
-                        substituteInPlace vnc_lite.html \
-                          --replace-fail 'const password = prompt("Password required:");' \
-                                         'const username = prompt("Username required:"); const password = prompt("Password required:");' \
-                          --replace-fail 'rfb.sendCredentials({ password: password });' \
-                                         'rfb.sendCredentials({ username: username, password: password });'
-                      '';
-                    });
                     timebase_hmi = timebaseHmi.packages.${targetSystem}.default.overrideAttrs (oldAttrs: {
                       postPatch = (oldAttrs.postPatch or "") + ''
                         mkdir -p assets

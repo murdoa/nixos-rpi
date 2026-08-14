@@ -11,8 +11,6 @@ let
 
     # Force GTK to request an OpenGL ES context supported by VC4.
     export GDK_GL=gles
-    export XCURSOR_THEME=Adwaita
-    export XCURSOR_PATH=${pkgs.adwaita-icon-theme}/share/icons
 
     exec ${kioskCmd}
   '';
@@ -23,18 +21,6 @@ let
       ${pkgs.openssl}/bin/openssl req -x509 -newkey rsa:2048 -nodes \
         -keyout /var/lib/novnc/tls.key \
         -out /var/lib/novnc/tls.crt \
-        -days 3650 \
-        -subj /CN=192.168.0.157 \
-        -addext subjectAltName=IP:192.168.0.157
-    fi
-  '';
-  westonVncCertificate = pkgs.writeShellScript "weston-vnc-certificate" ''
-    set -euo pipefail
-
-    if [[ ! -s /var/lib/weston-vnc/tls.key || ! -s /var/lib/weston-vnc/tls.crt ]]; then
-      ${pkgs.openssl}/bin/openssl req -x509 -newkey rsa:2048 -nodes \
-        -keyout /var/lib/weston-vnc/tls.key \
-        -out /var/lib/weston-vnc/tls.crt \
         -days 3650 \
         -subj /CN=192.168.0.157 \
         -addext subjectAltName=IP:192.168.0.157
@@ -66,8 +52,7 @@ let
       --config=${westonConfig} \
       --address=0.0.0.0 \
       --port=5900 \
-      --vnc-tls-cert=/var/lib/weston-vnc/tls.crt \
-      --vnc-tls-key=/var/lib/weston-vnc/tls.key \
+      --disable-transport-layer-security \
       -- \
       ${kioskAppScript}
   '';
@@ -93,8 +78,6 @@ in
 
   environment.systemPackages = with pkgs; [
     weston
-    novnc
-    python3Packages.websockify
     libdrm
     mesa-demos # optional: glxgears etc (small)
     cage
@@ -139,9 +122,7 @@ in
       ];
       RuntimeDirectory = "kiosk";
       RuntimeDirectoryMode = "0700";
-      StateDirectory = "weston-vnc";
       Environment = "XDG_RUNTIME_DIR=/run/kiosk";
-      ExecStartPre = westonVncCertificate;
       ExecStart = "${startWeston}";
       Restart = "always";
       RestartSec = 1;
