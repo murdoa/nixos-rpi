@@ -113,7 +113,7 @@
  }
  
  static bool
-@@ -765,6 +766,18 @@
+@@ -765,6 +766,20 @@
  	weston_seat_init_pointer(peer->seat);
  	weston_seat_init_keyboard(peer->seat, backend->xkb_keymap);
  
@@ -128,6 +128,8 @@
 +
 +	if (!weston_seat_get_pointer(peer->input_seat))
 +		weston_seat_init_pointer(peer->input_seat);
++	if (!weston_seat_get_keyboard(peer->input_seat))
++		weston_seat_init_keyboard(peer->input_seat, backend->xkb_keymap);
 +
  	if (wl_list_empty(&output->peers))
  		weston_output_power_on(&output->base);
