@@ -18,27 +18,6 @@
         "type": "github"
       }
     },
-    "flutterApp": {
-      "inputs": {
-        "flake-utils": "flake-utils",
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1768357896,
-        "narHash": "sha256-l/q4rXdDBTqZ/PdjeQT5dl5hBeVKHBIbPjKn5FPjVPE=",
-        "owner": "murdoa",
-        "repo": "flutter_reference_app",
-        "rev": "60f2c4aa9280ba82c60a11ae08d93666c0eb86af",
-        "type": "github"
-      },
-      "original": {
-        "owner": "murdoa",
-        "repo": "flutter_reference_app",
-        "type": "github"
-      }
-    },
     "nixlib": {
       "locked": {
         "lastModified": 1736643958,
@@ -93,10 +72,10 @@
     },
     "root": {
       "inputs": {
-        "flutterApp": "flutterApp",
         "nixos-generators": "nixos-generators",
         "nixpkgs": "nixpkgs",
-        "ssh-keys": "ssh-keys"
+        "ssh-keys": "ssh-keys",
+        "timebaseHmi": "timebaseHmi"
       }
     },
     "ssh-keys": {
@@ -124,6 +103,28 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
+      }
+    },
+    "timebaseHmi": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1786481412,
+        "narHash": "sha256-vMmhRtDjn5hxPfEYCSc15XznMlCHZptscs3/cC4zcZo=",
+        "ref": "refs/heads/flutter-3.35",
+        "rev": "bc8725e3871efae63718625d30449f38df19031d",
+        "revCount": 16,
+        "type": "git",
+        "url": "ssh://git@github.com/solarpi-org/timebase-hmi.git"
+      },
+      "original": {
+        "ref": "refs/heads/flutter-3.35",
+        "type": "git",
+        "url": "ssh://git@github.com/solarpi-org/timebase-hmi.git"
       }
     }
   },

@@ -5,7 +5,7 @@
   ...
 }:
 let
-  kioskCmd = "${pkgs.flutter_reference_app}/bin/flutter_reference_app";
+  kioskCmd = "${pkgs.timebase_hmi}/bin/timebase_hmi";
   kioskAppScript = pkgs.writeShellScript "kiosk-app" ''
     set -euo pipefail
 

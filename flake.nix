@@ -5,8 +5,8 @@
       url = "https://github.com/murdoa.keys";
       flake = false;
     };
-    flutterApp = {
-      url = "github:murdoa/flutter_reference_app";
+    timebaseHmi = {
+      url = "git+ssh://git@github.com/solarpi-org/timebase-hmi.git?ref=refs/heads/flutter-3.35";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nixos-generators = {
@@ -19,7 +19,7 @@
       self,
       nixpkgs,
       ssh-keys,
-      flutterApp,
+      timebaseHmi,
       nixos-generators,
     }@inputs:
     let
@@ -63,18 +63,16 @@
               {
                 nixpkgs.overlays = [
                   (final: prev: {
-                    flutter_reference_app = flutterApp.packages.${targetSystem}.default.overrideAttrs (oldAttrs: {
+                    timebase_hmi = timebaseHmi.packages.${targetSystem}.default.overrideAttrs (oldAttrs: {
                       postPatch = (oldAttrs.postPatch or "") + ''
                         mkdir -p assets
                         cp ${final.dejavu_fonts.minimal}/share/fonts/truetype/DejaVuSans.ttf assets/
                         cat >> pubspec.yaml <<'EOF'
                           fonts:
-                            - family: DejaVuSans
+                            - family: Roboto
                               fonts:
                                 - asset: assets/DejaVuSans.ttf
                         EOF
-                        substituteInPlace lib/main.dart \
-                          --replace-fail 'theme: ThemeData(' 'theme: ThemeData(fontFamily: "DejaVuSans",'
                       '';
                       extraWrapProgramArgs = ''
                         --prefix LD_LIBRARY_PATH : ${
@@ -113,7 +111,7 @@
         # Native build images (aarch64 only)
         pi3-image-native = images.pi3-native.out;
         # Flutter app package
-        flutter = flutterApp.packages.${system}.default;
+        flutter = timebaseHmi.packages.${system}.default;
       });
 
       apps.x86_64-linux =
