@@ -76,7 +76,7 @@
 					/* 100 kHz */
 					spi-max-frequency = <100000>;
 					backlight = <&backlight>;
-					rotation = <90>;
+					rotation = <270>;
 					reset-gpios = <&gpio_expander 1 GPIO_ACTIVE_HIGH>;
 
 					VCC-supply = <&lcd_vcc_3v3>;
