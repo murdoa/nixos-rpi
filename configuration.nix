@@ -8,6 +8,7 @@
 {
   imports = [
     ./out-of-tree/default.nix
+    ./display.nix
     ./graphics.nix
     ./kernel.nix
     ./splash.nix
@@ -23,9 +24,6 @@
   });
 
   # sdImage.compressImage = false;
-
-  hardware.out-of-tree.panel-sitronix-st7701.enable = true;
-  hardware.out-of-tree.touchscreen-hynitron-cst3240.enable = true;
 
   # fileSystems."/boot" = {
   #   device = "/dev/disk/by-label/ESP";
@@ -79,17 +77,6 @@
   hardware.deviceTree.enable = true;
   hardware.deviceTree.name = "broadcom/bcm2837-rpi-3-b-plus.dtb";
   hardware.deviceTree.filter = "*rpi*.dtb";
-  hardware.deviceTree.overlays = [
-    # {
-    #   name = "vc4-kms-dpi-er_tft_4_58_1";
-    #   dtsFile = ./dt-overlays/vc4-kms-dpi-er-tft-4-58-1-overlay.dts;
-    # }
-    {
-      name = "vc4-kms-dpi-er_tft_3_71_1";
-      dtsFile = ./dt-overlays/vc4-kms-dpi-er-tft-3-71-1-overlay.dts;
-    }
-  ];
-
   nixpkgs.config.allowUnfree = true;
   environment.systemPackages = with pkgs; [
     vim
