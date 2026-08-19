@@ -55,6 +55,33 @@
                 formatConfigs.sd-aarch64 =
                   { config, lib, ... }:
                   {
+                    # The kernel is pruned to Raspberry Pi hardware, so the
+                    # generic arm64 initrd module set contains unavailable
+                    # drivers such as dw-hdmi. Required Pi modules are listed
+                    # explicitly by the system configuration.
+                    boot.initrd.includeDefaultModules = false;
+                    boot.initrd.availableKernelModules = lib.mkForce [
+                      "ext4"
+                      "mmc_block"
+                    ];
+
+                    # The generic image adds serial and tty0 consoles that make
+                    # Plymouth attach to the wrong session instead of the DPI
+                    # display. Keep this aligned with the kiosk configuration.
+                    boot.kernelParams = lib.mkForce [
+                      "quiet"
+                      "splash"
+                      "console=tty1"
+                      "fbcon=map:1"
+                      "udev.log_priority=3"
+                      "rd.systemd.show_status=auto"
+                      "vt.global_cursor_default=0"
+                      "consoleblank=0"
+                      "video=HDMI-A-1:d"
+                      "loglevel=3"
+                      "lsm=${lib.concatStringsSep "," config.security.lsm}"
+                    ];
+
                     # sdImage.compressImage = lib.mkForce false;
                     # fileExtension = lib.mkForce ".img";
                   };
