@@ -58,7 +58,8 @@
                     # sdImage.compressImage = lib.mkForce false;
                     # fileExtension = lib.mkForce ".img";
                   };
-                nixpkgs.hostPlatform = buildSystem;
+                nixpkgs.buildPlatform = buildSystem;
+                nixpkgs.hostPlatform = targetSystem;
               }
               {
                 nixpkgs.overlays = [
@@ -91,13 +92,6 @@
                     });
                   })
                 ];
-              }
-            ]
-            ++ nixpkgs.lib.optionals (buildSystem != targetSystem) [
-              {
-                nixpkgs.crossSystem = {
-                  system = targetSystem;
-                };
               }
             ];
         };
