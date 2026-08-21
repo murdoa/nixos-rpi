@@ -107,15 +107,28 @@
                                 - asset: assets/DejaVuSans.ttf
                         EOF
                       '';
-                      extraWrapProgramArgs = ''
-                        --prefix LD_LIBRARY_PATH : ${
-                          final.lib.makeLibraryPath [
-                            final.mesa
-                            final.libglvnd
-                            final.gtk3
-                          ]
-                        }
-                      '';
+                      extraWrapProgramArgs =
+                        let
+                          gstPlugins = [
+                            final.gst_all_1.gstreamer.out
+                            final.gst_all_1.gst-plugins-base
+                            final.gst_all_1.gst-plugins-good
+                            final.gst_all_1.gst-plugins-bad
+                            final.gst_all_1.gst-plugins-ugly
+                            final.gst_all_1.gst-libav
+                          ];
+                        in
+                        ''
+                          --prefix LD_LIBRARY_PATH : ${
+                            final.lib.makeLibraryPath ([
+                              final.mesa
+                              final.libglvnd
+                              final.gtk3
+                              final.gst_all_1.gstreamer
+                            ] ++ gstPlugins)
+                          } \
+                          --set GST_PLUGIN_SYSTEM_PATH_1_0 "${final.lib.makeSearchPath "lib/gstreamer-1.0" gstPlugins}"
+                        '';
                     });
                   })
                 ];

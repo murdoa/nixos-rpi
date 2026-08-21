@@ -57,6 +57,7 @@
     "usbhid"
     "usb-storage"
     "panel-sitronix-st7701"
+    "bcm2835_v4l2"
   ];
 
   boot.kernelParams = [
@@ -83,11 +84,26 @@
     git
     libdrm
     evtest
+    gst_all_1.gstreamer
+    gst_all_1.gst-plugins-base
+    gst_all_1.gst-plugins-good
+    gst_all_1.gst-plugins-bad
+    gst_all_1.gst-libav
+    v4l-utils
   ];
+  environment.sessionVariables.GST_PLUGIN_SYSTEM_PATH_1_0 = lib.makeSearchPath "lib/gstreamer-1.0" [
+    pkgs.gst_all_1.gstreamer.out
+    pkgs.gst_all_1.gst-plugins-base
+    pkgs.gst_all_1.gst-plugins-good
+    pkgs.gst_all_1.gst-plugins-bad
+    pkgs.gst_all_1.gst-plugins-ugly
+    pkgs.gst_all_1.gst-libav
+  ];
+
   services.openssh.enable = true;
   networking = {
     hostName = "nixos";
-
+    firewall.allowedUDPPorts = [ 9000 ];
     useDHCP = true;
   };
 
