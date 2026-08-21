@@ -98,6 +98,37 @@ in
     ];
   };
 
+  # Narrow root helper for local display maintenance. The kiosk can write only
+  # two fixed commands to the FIFO; it receives no sudo or general systemd access.
+  systemd.tmpfiles.rules = [
+    "p /run/galactica-hmi-control 0620 kiosk users -"
+  ];
+
+  systemd.services.galactica-hmi-control = {
+    description = "GALACTICA display control helper";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "systemd-tmpfiles-setup.service" ];
+    serviceConfig = {
+      Restart = "always";
+      RestartSec = 1;
+      ExecStart = pkgs.writeShellScript "galactica-display-control" ''
+        set -euo pipefail
+        while true; do
+          while IFS= read -r command; do
+            case "$command" in
+              restart-hmi)
+                ${pkgs.systemd}/bin/systemctl restart weston-kiosk.service
+                ;;
+              reboot-display)
+                ${pkgs.systemd}/bin/systemctl reboot
+                ;;
+            esac
+          done < /run/galactica-hmi-control
+        done
+      '';
+    };
+  };
+
   # Start the compositor directly instead of waiting for getty autologin, PAM,
   # and a per-user systemd manager. Ordering after plymouth-quit gives Weston
   # the DRM master immediately after the splash releases it.
