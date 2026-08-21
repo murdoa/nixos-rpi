@@ -107,6 +107,14 @@
     useDHCP = true;
   };
 
+  # DHCP option 42 should supply this server; keep the dedicated-link address
+  # as an explicit fallback so display time never depends on the external LAN.
+  services.timesyncd = {
+    enable = true;
+    servers = [ "10.42.0.1" ];
+    fallbackServers = [ ];
+  };
+
   # This is an appliance.  Persistent logs both wear the SD card and make boot
   # replay the previous journal before basic.target can be reached.
   services.journald.extraConfig = ''
