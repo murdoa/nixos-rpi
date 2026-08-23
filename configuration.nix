@@ -104,7 +104,16 @@
   networking = {
     hostName = "nixos";
     firewall.allowedUDPPorts = [ 9000 ];
-    useDHCP = true;
+    useDHCP = false;
+    interfaces.enu1u1 = {
+      useDHCP = true;
+      ipv4.addresses = [
+        {
+          address = "10.42.0.2";
+          prefixLength = 30;
+        }
+      ];
+    };
   };
 
   # DHCP option 42 should supply this server; keep the dedicated-link address
