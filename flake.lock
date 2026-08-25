@@ -113,11 +113,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787613485,
-        "narHash": "sha256-i1aRrCYyCpQFGkRFhQOGFwc+LYlrS3D/WdFqRRhrZQ4=",
+        "lastModified": 1787616583,
+        "narHash": "sha256-+/j1gBKcAulAyPPLXC62Hb8GzZhRLtjAGvkeS4oNsHk=",
         "ref": "refs/heads/flutter-3.35",
-        "rev": "f21041235a01eddcb9aa5f5c850cdf2d4c0b629a",
-        "revCount": 56,
+        "rev": "a4a946f88aba37ae9e74b0bbcfd1226e13230b49",
+        "revCount": 57,
         "type": "git",
         "url": "ssh://git@github.com/solarpi-org/timebase-hmi.git"
       },
