@@ -83,6 +83,7 @@
     vim
     git
     libdrm
+    i2c-tools
     evtest
     gst_all_1.gstreamer
     gst_all_1.gst-plugins-base
@@ -102,7 +103,7 @@
 
   services.openssh.enable = true;
   networking = {
-    hostName = "nixos";
+    hostName = lib.mkDefault "nixos";
     firewall.allowedUDPPorts = [ 9000 ];
     useDHCP = false;
     interfaces.enu1u1 = {
